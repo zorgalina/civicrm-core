@@ -947,10 +947,37 @@ LIMIT {$offset}, {$rowCount}
     $searchRows       = array();
     $selectorElements = array('src', 'dst', 'weight', 'actions');
 
+    $filter = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
+    $firstName = CRM_Utils_Type::escape($_REQUEST['firstName'], 'String');
+    $lastName = CRM_Utils_Type::escape($_REQUEST['lastName'], 'String');
+    $email = CRM_Utils_Type::escape($_REQUEST['email'], 'String');
+    $postalCode = CRM_Utils_Type::escape($_REQUEST['postalCode'], 'String');
 
-    $join = "LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND
+    $join = '';
+    $where .= "de.id IS NULL";
+
+    if ($filter) {
+      if ($firstName || $firstName || $email || $postalCode) {
+        $join .= " INNER JOIN civicrm_contact contact ON ( pn.entity_id1 = contact.id AND pn.entity_id2 = contact.id )";
+      }
+    }
+    if ($firstName) {
+      $where .= " AND contact.first_name LIKE '%".$firstName."%'";
+    }
+    if ($lastName) {
+      $where .= " AND contact.last_name LIKE '%".$lastName."%'";
+    }
+    if ($email) {
+      $join .= " INNER JOIN civicrm_email ON civicrm_email.contact_id = contact.id";
+      $where .= " AND civicrm_email.is_primary = 1 AND civicrm_email.email = '".$email."'";
+    }
+    if ($postalCode) {
+      $join .= " INNER JOIN civicrm_address ON civicrm_address.contact_id = contact.id";
+      $where .= " AND civicrm_address.is_primary = 1 AND civicrm_address.postal_code = '".$postalCode."'";
+    }
+
+    $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND
                                                              pn.entity_id2 = de.contact_id2 )";
-    $where = "de.id IS NULL";
 
     $iFilteredTotal = $iTotal = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, $join, $where);
     $mainContacts = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount);
