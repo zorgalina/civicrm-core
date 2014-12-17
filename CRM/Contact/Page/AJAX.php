@@ -929,7 +929,6 @@ LIMIT {$offset}, {$rowCount}
   }
 
   static function getDedupes() {
-
     $sEcho     = CRM_Utils_Type::escape($_REQUEST['sEcho'], 'Integer');
     $offset    = isset($_REQUEST['iDisplayStart']) ? CRM_Utils_Type::escape($_REQUEST['iDisplayStart'], 'Integer') : 0;
     $rowCount  = isset($_REQUEST['iDisplayLength']) ? CRM_Utils_Type::escape($_REQUEST['iDisplayLength'], 'Integer') : 25;
@@ -947,37 +946,39 @@ LIMIT {$offset}, {$rowCount}
     $searchRows       = array();
     $selectorElements = array('src', 'dst', 'weight', 'actions');
 
-    $filter = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
-    $firstName = CRM_Utils_Type::escape($_REQUEST['firstName'], 'String');
-    $lastName = CRM_Utils_Type::escape($_REQUEST['lastName'], 'String');
-    $email = CRM_Utils_Type::escape($_REQUEST['email'], 'String');
+    $filter     = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
+    $firstName  = CRM_Utils_Type::escape($_REQUEST['firstName'], 'String');
+    $lastName   = CRM_Utils_Type::escape($_REQUEST['lastName'], 'String');
+    $email      = CRM_Utils_Type::escape($_REQUEST['email'], 'String');
     $postalCode = CRM_Utils_Type::escape($_REQUEST['postalCode'], 'String');
 
-    $join = '';
-    $where .= "de.id IS NULL";
+    $join  = '';
+    $where = "de.id IS NULL";
 
     if ($filter) {
-      if ($firstName || $firstName || $email || $postalCode) {
-        $join .= " INNER JOIN civicrm_contact contact ON ( pn.entity_id1 = contact.id AND pn.entity_id2 = contact.id )";
+      if ($firstName || $lastName || $email || $postalCode) {
+        $join .= " INNER JOIN civicrm_contact contact1 ON pn.entity_id1 = contact1.id";
+        $join .= " INNER JOIN civicrm_contact contact2 ON pn.entity_id2 = contact2.id";
       }
     }
     if ($firstName) {
-      $where .= " AND contact.first_name LIKE '%".$firstName."%'";
+      $where .= " AND (contact1.first_name LIKE '%{$firstName}%' OR contact2.first_name LIKE '%{$firstName}%')";
     }
     if ($lastName) {
-      $where .= " AND contact.last_name LIKE '%".$lastName."%'";
+      $where .= " AND (contact1.last_name LIKE '%{$lastName}%' OR contact2.last_name LIKE '%{$lastName}%')";
     }
     if ($email) {
-      $join .= " INNER JOIN civicrm_email ON civicrm_email.contact_id = contact.id";
-      $where .= " AND civicrm_email.is_primary = 1 AND civicrm_email.email = '".$email."'";
+      $join  .= " INNER JOIN civicrm_email email1 ON email1.contact_id = contact1.id";
+      $join  .= " INNER JOIN civicrm_email email2 ON email2.contact_id = contact2.id";
+      $where .= " AND ((email1.is_primary = 1 AND email1.email LIKE '%{$email}%') OR (email2.is_primary = 1 AND email2.email LIKE '%{$email}%'))";
     }
     if ($postalCode) {
-      $join .= " INNER JOIN civicrm_address ON civicrm_address.contact_id = contact.id";
-      $where .= " AND civicrm_address.is_primary = 1 AND civicrm_address.postal_code = '".$postalCode."'";
+      $join  .= " INNER JOIN civicrm_address addr1 ON addr1.contact_id = contact1.id";
+      $join  .= " INNER JOIN civicrm_address addr2 ON addr2.contact_id = contact2.id";
+      $where .= " AND ((addr1.is_primary = 1 AND addr1.postal_code = '{$postalCode}') OR (addr2.is_primary = 1 AND addr2.postal_code = '{$postalCode}'))";
     }
 
-    $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND
-                                                             pn.entity_id2 = de.contact_id2 )";
+    $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND pn.entity_id2 = de.contact_id2 )";
 
     $iFilteredTotal = $iTotal = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, $join, $where);
     $mainContacts = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount);
