@@ -53,13 +53,18 @@
       </table>
     </div><!-- /.crm-accordion-body -->
   </div><!-- /.crm-accordion-wrapper -->
-  <table class='pagerDisplay'>
+  <table id="dupePairs" class='pagerDisplay'>
     <thead>
 <!--    <tr class="columnheader"><th class="sortable">{ts}Contact{/ts} 1</th><th id="sortable">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th><th id="sortable">{ts}Threshold{/ts}</th><th id="sortable">&nbsp;</th></tr>-->
-    <tr class="columnheader"><th class="crm-contact">{ts}Contact{/ts} 1</th><th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th><th class="crm-threshold">{ts}Threshold{/ts}</th><th class="crm-empty">&nbsp;</th></tr>
+      <tr class="columnheader">
+        <th class="crm-contact">{ts}Contact{/ts} 1</th>
+        <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-threshold">{ts}Threshold{/ts}</th>
+        <th class="crm-empty">&nbsp;</th>
+      </tr>
     </thead>
   </table>
-  {include file="CRM/common/jsortable.tpl" sourceUrl=$sourceUrl useAjax=1 }
+  {*include file="CRM/common/jsortable.tpl" sourceUrl=$sourceUrl useAjax=1*}
   {if $cid}
     <table style="width: 45%; float: left; margin: 10px;">
       <tr class="columnheader"><th colspan="2">{ts 1=$main_contacts[$cid]}Merge %1 with{/ts}</th></tr>
@@ -107,80 +112,26 @@
 {include file='CRM/common/dedupe.tpl'}
 {literal}
 <script type="text/javascript">
-//var oTable = null;
-var {/literal}{$context}{literal}oTable;
 CRM.$(function($) {
-  buildDedupeContacts{/literal}{$context}{literal}( false );
-  var context = {/literal}"{$context}"{literal};
-  var sourceUrl = {/literal}'{$sourceUrl}'{literal};
-
-  var firstName = $('#first_name').val();
-  var lastName = $('#last_name').val();
-  var email = $('#email').val();
-  var postalCode = $('#postal_code').val();
-
-  $('#first_name').blur(function() {
-    firstName = $(this).val();
-  });
-
-  $('#last_name').blur(function() {
-    lastName = $(this).val();
-  });
-
-  $('#email').blur(function() {
-    email = $(this).val();
-  });
-
-  $('#postal_code').blur(function() {
-    postalCode = $(this).val();
-  });
+  buildDedupeContacts(false);
 
   $( "#search-filter" ).click(function() {
-    var resetSourceURL = sourceUrl;
-    if (resetSourceURL) {
-      resetSourceURL = resetSourceURL + '&filter=true';
-    }
-    if (firstName) {
-      resetSourceURL = resetSourceURL + '&firstName=' + firstName;
-    }
-    if (lastName) {
-      resetSourceURL = resetSourceURL + '&lastName=' + lastName;
-    }
-    if (email) {
-      resetSourceURL = resetSourceURL + '&email=' + email;
-    }
-    if (postalCode) {
-      resetSourceURL = resetSourceURL + '&postal_code=' + postalCode;
-    }
-    buildDedupeContacts{/literal}{$context}{literal}( true, resetSourceURL );
-    console.log(sourceUrl);
+    buildDedupeContacts(true);
   });
 
-  function buildDedupeContacts{/literal}{$context}{literal}( filterSearch, sourceUrl ) {
-    if ( filterSearch && {/literal}{$context}{literal}oTable ) {
-      {/literal}{$context}{literal}oTable.fnDestroy();
+  function buildDedupeContacts(filterSearch) {
+    if (filterSearch) {
+      oTable.fnDestroy();
     }
 
-    var context = {/literal}"{$context}"{literal};
     var columns = '';
     var count = 0;
-
-/*    CRM.$('#option51 th').each(function( ) {
-      if (CRM.$(this).attr('id') != 'nosort') {
-        columns += '{"sClass": "' + CRM.$(this).attr('class') +'"},';
-      }
-      else {
-        columns += '{ "bSortable": false },';
-      }
-      count++;
-    });
-
-    columns    = columns.substring(0, columns.length - 1 );
-    eval('columns =[' + columns + ']');*/
+    var sourceUrl = {/literal}'{$sourceUrl}'{literal};
+    console.log(sourceUrl);
 
     var ZeroRecordText = {/literal}'{ts escape="js"}No matches found{/ts}'{literal};
 
-    {/literal}{$context}{literal}oTable = $('#option51').dataTable({
+    oTable = $('#dupePairs').dataTable({
       "multipleSelection": true,
       "bFilter"    : false,
       "bAutoWidth" : false,
@@ -191,19 +142,13 @@ CRM.$(function($) {
         {sClass:'crm-threshold'},
         {sClass:'crm-empty', bSortable:false}
       ],
-/*      "aoColumns"  : [
-            { "asSorting": [  0, "asc" ] },
-            { "asSorting": [ "desc", "asc", "asc" ] },
-            { "asSorting": [ "desc", "asc", "asc" ] },
-            null
-        ],*/
       "bProcessing": true,
       "sPaginationType": "full_numbers",
       "sDom"       : '<"crm-datatable-pager-top"lfp>rt<"crm-datatable-pager-bottom"ip>',
       "bServerSide": true,
       "bJQueryUI": true,
       "sAjaxSource": sourceUrl,
-      "iDisplayLength": 25,
+      "iDisplayLength": 10,
       "oLanguage": {
         "sZeroRecords":  ZeroRecordText,
         "sProcessing":   {/literal}"{ts escape='js'}Processing...{/ts}"{literal},
@@ -219,12 +164,14 @@ CRM.$(function($) {
           "sLast":     {/literal}"{ts escape='js'}Last{/ts}"{literal}
         }
       },
-      "fnDrawCallback": function() { setSelectorClass{/literal}{$context}{literal}( context ); },
+      "fnDrawCallback": function() { setSelectorClass(); },
       "fnServerData": function ( sSource, aoData, fnCallback ) {
+        if ( filterSearch ) {
           aoData.push(
-          {name:'first_name', value: CRM.$("#first_name").val()},
-          {name:'last_name', value: CRM.$("#last_name").val()}
-        );
+            {name:'firstName', value: CRM.$("#first_name").val()},
+            {name:'lastName', value: CRM.$("#last_name").val()}
+          );
+        }
         $.ajax( {
           "dataType": 'json',
           "type": "POST",
@@ -238,8 +185,8 @@ CRM.$(function($) {
     });
   }
 
-  function setSelectorClass{/literal}{$context}{literal}( context ) {
-    $('#option51' + context + ' td:last-child').each( function( ) {
+  function setSelectorClass( ) {
+    $('#dupePairs td:last-child').each( function( ) {
       $(this).parent().addClass($(this).text() );
     });
   }

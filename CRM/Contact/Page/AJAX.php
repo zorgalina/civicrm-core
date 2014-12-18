@@ -946,20 +946,28 @@ LIMIT {$offset}, {$rowCount}
     $searchRows       = array();
     $selectorElements = array('src', 'dst', 'weight', 'actions');
 
-    $filter     = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
-    $firstName  = CRM_Utils_Type::escape($_REQUEST['firstName'], 'String');
-    $lastName   = CRM_Utils_Type::escape($_REQUEST['lastName'], 'String');
-    $email      = CRM_Utils_Type::escape($_REQUEST['email'], 'String');
-    $postalCode = CRM_Utils_Type::escape($_REQUEST['postalCode'], 'String');
+    if (CRM_Utils_Array::value('filter', $_REQUEST)) {
+      $filter     = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
+    }
+    if (CRM_Utils_Array::value('firstName', $_REQUEST)) {
+      $firstName  = CRM_Utils_Type::escape($_REQUEST['firstName'], 'String');
+    }
+    if (CRM_Utils_Array::value('lastName', $_REQUEST)) {
+      $lastName   = CRM_Utils_Type::escape($_REQUEST['lastName'], 'String');
+    }
+    if (CRM_Utils_Array::value('email', $_REQUEST)) {
+      $email      = CRM_Utils_Type::escape($_REQUEST['email'], 'String');
+    }
+    if (CRM_Utils_Array::value('postalCode', $_REQUEST)) {
+      $postalCode = CRM_Utils_Type::escape($_REQUEST['postalCode'], 'String');
+    }
 
     $join  = '';
     $where = "de.id IS NULL";
 
-    if ($filter) {
-      if ($firstName || $lastName || $email || $postalCode) {
-        $join .= " INNER JOIN civicrm_contact contact1 ON pn.entity_id1 = contact1.id";
-        $join .= " INNER JOIN civicrm_contact contact2 ON pn.entity_id2 = contact2.id";
-      }
+    if ($firstName || $lastName || $email || $postalCode) {
+      $join .= " INNER JOIN civicrm_contact contact1 ON pn.entity_id1 = contact1.id";
+      $join .= " INNER JOIN civicrm_contact contact2 ON pn.entity_id2 = contact2.id";
     }
     if ($firstName) {
       $where .= " AND (contact1.first_name LIKE '%{$firstName}%' OR contact2.first_name LIKE '%{$firstName}%')";
