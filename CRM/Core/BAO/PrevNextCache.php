@@ -170,9 +170,9 @@ WHERE  cacheKey     = %3 AND
    *
    * @return array
    */
-  static function retrieve($cacheKey, $join = NULL, $where = NULL, $offset = 0, $rowCount = 0) {
+  static function retrieve($cacheKey, $join = NULL, $where = NULL, $offset = 0, $rowCount = 0, $moreThanData = FALSE) {
     $query = "
-SELECT data
+SELECT pn.*
 FROM   civicrm_prevnext_cache pn
        {$join}
 WHERE  cacheKey = %1
@@ -192,14 +192,26 @@ WHERE  cacheKey = %1
 
     $dao = CRM_Core_DAO::executeQuery($query, $params);
 
-    $main = array();
+    $main  = array();
+    $count = 0;
     while ($dao->fetch()) {
       if (self::is_serialized($dao->data)) {
-        $main[] = unserialize($dao->data);
+        $main[$count] = unserialize($dao->data);
       }
       else {
-        $main[] = $dao->data;
+        $main[$count] = $dao->data;
       }
+
+      if ($moreThanData) {
+        $main[$count] = array(
+          'prevnext_id' => $dao->id, 
+          'is_selected' => $dao->is_selected, 
+          'entity_id1'  => $dao->entity_id1, 
+          'entity_id2'  => $dao->entity_id2, 
+          'data'        => $main[$count],
+        );
+      }
+      $count++;
     }
 
     return $main;

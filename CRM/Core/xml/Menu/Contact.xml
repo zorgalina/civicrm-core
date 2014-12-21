@@ -390,6 +390,11 @@
      <access_arguments>access CiviCRM</access_arguments>
 </item>
 <item>
+     <path>civicrm/ajax/toggleDedupeSelect</path>
+     <page_callback>CRM_Contact_Page_AJAX::toggleDedupeSelect</page_callback>
+     <access_arguments>access CiviCRM</access_arguments>
+</item>
+<item>
   <path>civicrm/activity/sms/add</path>
   <path_arguments>action=add</path_arguments>
   <title>Activities</title>

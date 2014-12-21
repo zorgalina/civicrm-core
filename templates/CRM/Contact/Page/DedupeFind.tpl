@@ -57,12 +57,22 @@
     <thead>
 <!--    <tr class="columnheader"><th class="sortable">{ts}Contact{/ts} 1</th><th id="sortable">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th><th id="sortable">{ts}Threshold{/ts}</th><th id="sortable">&nbsp;</th></tr>-->
       <tr class="columnheader">
+        <th class="crm-dedupe-merge">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-threshold">{ts}Threshold{/ts}</th>
         <th class="crm-empty">&nbsp;</th>
       </tr>
     </thead>
+    <tfoot>
+      <tr class="columnfooter">
+        <th class="crm-dedupe-merge">&nbsp;</th>
+        <th class="crm-contact">{ts}Contact{/ts} 1</th>
+        <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-threshold">{ts}Threshold{/ts}</th>
+        <th class="crm-empty">&nbsp;</th>
+      </tr>
+    </tfoot>
   </table>
   {*include file="CRM/common/jsortable.tpl" sourceUrl=$sourceUrl useAjax=1*}
   {if $cid}
@@ -113,83 +123,53 @@
 {literal}
 <script type="text/javascript">
 CRM.$(function($) {
-  buildDedupeContacts(false);
-
-  $( "#search-filter" ).click(function() {
-    buildDedupeContacts(true);
+  var sourceUrl = {/literal}'{$sourceUrl}'{literal};
+  $('#dupePairs').dataTable({
+    "ajax": sourceUrl,
+    "columns"  : [
+      {data: "is_selected"},
+      {data: "src"},
+      {data: "dst"},
+      {data: "weight"},
+      {data: "actions"},
+    ]
+  });
+  $('#dupePairs tfoot th').each( function () {
+    var title = $('#dupePairs thead th').eq($(this).index()).text();
+    if (title.length > 1) {
+      $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+    }
   });
 
-  function buildDedupeContacts(filterSearch) {
-    if (filterSearch) {
-      oTable.fnDestroy();
-    }
-
-    var columns = '';
-    var count = 0;
-    var sourceUrl = {/literal}'{$sourceUrl}'{literal};
-    console.log(sourceUrl);
-
-    var ZeroRecordText = {/literal}'{ts escape="js"}No matches found{/ts}'{literal};
-
-    oTable = $('#dupePairs').dataTable({
-      "multipleSelection": true,
-      "bFilter"    : false,
-      "bAutoWidth" : false,
-      "aaSorting"  : [],
-      "aoColumns"  : [
-        {sClass:'crm-contact'},
-        {sClass:'crm-contact-duplicate'},
-        {sClass:'crm-threshold'},
-        {sClass:'crm-empty', bSortable:false}
-      ],
-      "bProcessing": true,
-      "sPaginationType": "full_numbers",
-      "sDom"       : '<"crm-datatable-pager-top"lfp>rt<"crm-datatable-pager-bottom"ip>',
-      "bServerSide": true,
-      "bJQueryUI": true,
-      "sAjaxSource": sourceUrl,
-      "iDisplayLength": 10,
-      "oLanguage": {
-        "sZeroRecords":  ZeroRecordText,
-        "sProcessing":   {/literal}"{ts escape='js'}Processing...{/ts}"{literal},
-        "sLengthMenu":   {/literal}"{ts escape='js'}Show _MENU_ entries{/ts}"{literal},
-        "sInfo":         {/literal}"{ts escape='js'}Showing _START_ to _END_ of _TOTAL_ entries{/ts}"{literal},
-        "sInfoEmpty":    {/literal}"{ts escape='js'}Showing 0 to 0 of 0 entries{/ts}"{literal},
-        "sInfoFiltered": {/literal}"{ts escape='js'}(filtered from _MAX_ total entries){/ts}"{literal},
-        "sSearch":       {/literal}"{ts escape='js'}Search:{/ts}"{literal},
-        "oPaginate": {
-          "sFirst":    {/literal}"{ts escape='js'}First{/ts}"{literal},
-          "sPrevious": {/literal}"{ts escape='js'}Previous{/ts}"{literal},
-          "sNext":     {/literal}"{ts escape='js'}Next{/ts}"{literal},
-          "sLast":     {/literal}"{ts escape='js'}Last{/ts}"{literal}
-        }
-      },
-      "fnDrawCallback": function() { setSelectorClass(); },
-      "fnServerData": function ( sSource, aoData, fnCallback ) {
-        if ( filterSearch ) {
-          aoData.push(
-            {name:'firstName', value: CRM.$("#first_name").val()},
-            {name:'lastName', value: CRM.$("#last_name").val()}
-          );
-        }
-        $.ajax( {
-          "dataType": 'json',
-          "type": "POST",
-          "url": sSource,
-          "data": aoData,
-          "success": fnCallback,
-          // CRM-10244
-          "dataFilter": function(data, type) { return data.replace(/[\n\v\t]/g, " "); }
-        });
-      }
+  // DataTable
+  var table = $('#dupePairs').DataTable();
+  
+  // Apply the search
+  $('#dupePairs').DataTable().columns().eq(0).each(function (colIdx) {
+    $( 'input', table.column(colIdx).footer()).on( 'keyup change', function () {
+      table
+        .column(colIdx)
+        .search(this.value)
+        .draw();
     });
-  }
-
-  function setSelectorClass( ) {
-    $('#dupePairs td:last-child').each( function( ) {
-      $(this).parent().addClass($(this).text() );
-    });
-  }
+  });
 });
+
+function toggleDedupeSelect(element) {
+  console.log(element);
+  var is_selected = CRM.$(element).prop('checked') ? 1: 0;
+  var id = CRM.$(element).prop('name').substr(5);
+
+  var dataUrl = {/literal}"{crmURL p='civicrm/ajax/toggleDedupeSelect' h=0 q='snippet=4'}"{literal};
+  var rgid = {/literal}"{$rgid}"{literal};
+  var gid = {/literal}"{$gid}"{literal};
+
+  rgid = rgid.length > 0 ? rgid : 0;
+  gid  = gid.length > 0 ? gid : 0;
+  
+  CRM.$.post(dataUrl, {pnid: id, rgid: rgid, gid: gid, is_selected: is_selected}, function (data) {
+    console.log(data);
+  }, 'json');
+}
 </script>
 {/literal}

@@ -929,7 +929,6 @@ LIMIT {$offset}, {$rowCount}
   }
 
   static function getDedupes() {
-    $sEcho     = CRM_Utils_Type::escape($_REQUEST['sEcho'], 'Integer');
     $offset    = isset($_REQUEST['iDisplayStart']) ? CRM_Utils_Type::escape($_REQUEST['iDisplayStart'], 'Integer') : 0;
     $rowCount  = isset($_REQUEST['iDisplayLength']) ? CRM_Utils_Type::escape($_REQUEST['iDisplayLength'], 'Integer') : 25;
     $sort      = 'sort_name';
@@ -944,7 +943,7 @@ LIMIT {$offset}, {$rowCount}
 
     $cacheKeyString   = "merge {$contactType}_{$rgid}_{$gid}";
     $searchRows       = array();
-    $selectorElements = array('src', 'dst', 'weight', 'actions');
+    $selectorElements = array('is_selected', 'src', 'dst', 'weight', 'actions');
 
     if (CRM_Utils_Array::value('filter', $_REQUEST)) {
       $filter     = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
@@ -989,28 +988,31 @@ LIMIT {$offset}, {$rowCount}
     $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND pn.entity_id2 = de.contact_id2 )";
 
     $iFilteredTotal = $iTotal = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, $join, $where);
-    $mainContacts = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount);
+    $dupePairs = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount, TRUE);
 
-    foreach ($mainContacts as $mainId => $main) {
-      $searchRows[$mainId]['src'] = CRM_Utils_System::href($main['srcName'], 'civicrm/contact/view', "reset=1&cid={$main['srcID']}");
-      $searchRows[$mainId]['dst'] = CRM_Utils_System::href($main['dstName'], 'civicrm/contact/view', "reset=1&cid={$main['dstID']}");
-      $searchRows[$mainId]['weight'] = CRM_Utils_Array::value('weight', $main);
+    $count = 0;
+    foreach ($dupePairs as $key => $pairInfo) {
+      $pair =& $pairInfo['data'];
+      $searchRows[$count]['is_selected'] = "<input type='checkbox' name='pnid_{$pairInfo['prevnext_id']}' value='{$pairInfo['is_selected']}' onclick='toggleDedupeSelect(this)'>";
+      $searchRows[$count]['src'] = CRM_Utils_System::href($pair['srcName'], 'civicrm/contact/view', "reset=1&cid={$pair['srcID']}");
+      $searchRows[$count]['dst'] = CRM_Utils_System::href($pair['dstName'], 'civicrm/contact/view', "reset=1&cid={$pair['dstID']}");
+      $searchRows[$count]['weight'] = CRM_Utils_Array::value('weight', $pair);
 
-      if (!empty($main['canMerge'])) {
-        $mergeParams = "reset=1&cid={$main['srcID']}&oid={$main['dstID']}&action=update&rgid={$rgid}";
+      if (!empty($pair['canMerge'])) {
+        $mergeParams = "reset=1&cid={$pair['srcID']}&oid={$pair['dstID']}&action=update&rgid={$rgid}";
         if ($gid) {
           $mergeParams .= "&gid={$gid}";
         }
 
-        $searchRows[$mainId]['actions'] = CRM_Utils_System::href(ts('merge'), 'civicrm/contact/merge', $mergeParams);
-        $searchRows[$mainId]['actions'] .= "&nbsp;|&nbsp; <a id='notDuplicate' href='#' onClick=\"processDupes( {$main['srcID']}, {$main['dstID']}, 'dupe-nondupe', 'dupe-listing'); return false;\">" . ts('not a duplicate') . "</a>";
+        $searchRows[$count]['actions'] = CRM_Utils_System::href(ts('merge'), 'civicrm/contact/merge', $mergeParams);
+        $searchRows[$count]['actions'] .= "&nbsp;|&nbsp; <a id='notDuplicate' href='#' onClick=\"processDupes( {$pair['srcID']}, {$pair['dstID']}, 'dupe-nondupe', 'dupe-listing'); return false;\">" . ts('not a duplicate') . "</a>";
       }
       else {
-        $searchRows[$mainId]['actions'] = '<em>' . ts('Insufficient access rights - cannot merge') . '</em>';
+        $searchRows[$count]['actions'] = '<em>' . ts('Insufficient access rights - cannot merge') . '</em>';
       }
+      $count++;
     }
-
-    echo CRM_Utils_JSON::encodeDataTableSelector($searchRows, $sEcho, $iTotal, $iFilteredTotal, $selectorElements);
+    echo CRM_Utils_JSON::encodeDataTable($searchRows, $selectorElements);
 
     CRM_Utils_System::civiExit();
   }
@@ -1069,6 +1071,27 @@ LIMIT {$offset}, {$rowCount}
 
     $arrRet = array('getCount' => $countSelectionCids);
     CRM_Utils_JSON::output($arrRet);
+  }
+
+  static function toggleDedupeSelect() {
+    $rgid = CRM_Utils_Type::escape($_REQUEST['rgid'], 'Integer');
+    $gid  = CRM_Utils_Type::escape($_REQUEST['gid'], 'Integer');
+    $pnid = CRM_Utils_Type::escape($_REQUEST['pnid'], 'Integer');
+    $isSelected = CRM_Utils_Type::escape($_REQUEST['is_selected'], 'Boolean');
+    
+    $contactType = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $rgid, 'contact_type');
+    $cacheKeyString  = "merge $contactType";
+    $cacheKeyString .= $rgid ? "_{$rgid}" : '_0';
+    $cacheKeyString .= $gid ? "_{$gid}" : '_0';
+
+    $sql = "UPDATE civicrm_prevnext_cache SET is_selected = %1 WHERE id = %2 AND cacheKey LIKE %3";
+    $params = array( 
+      1 => array($isSelected, 'Boolean'),
+      2 => array($pnid, 'Integer'),
+      3 => array($cacheKeyString, 'String')
+    );
+    $result = CRM_Core_DAO::executeQuery($sql, $params);
+    CRM_Utils_JSON::output($result);
   }
 
   /**
