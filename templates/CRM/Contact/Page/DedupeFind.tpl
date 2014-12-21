@@ -127,12 +127,16 @@ CRM.$(function($) {
   $('#dupePairs').dataTable({
     "ajax": sourceUrl,
     "columns"  : [
-      {data: "is_selected"},
+      {data: "is_selected_input"},
       {data: "src"},
       {data: "dst"},
       {data: "weight"},
       {data: "actions"},
-    ]
+    ],
+    rowCallback: function (row, data) {
+      // Set the checked state of the checkbox in the table
+      $('input.crm-dedupe-select', row).prop( 'checked', data.is_selected == 1 );
+    }
   });
   $('#dupePairs tfoot th').each( function () {
     var title = $('#dupePairs thead th').eq($(this).index()).text();
@@ -156,7 +160,6 @@ CRM.$(function($) {
 });
 
 function toggleDedupeSelect(element) {
-  console.log(element);
   var is_selected = CRM.$(element).prop('checked') ? 1: 0;
   var id = CRM.$(element).prop('name').substr(5);
 

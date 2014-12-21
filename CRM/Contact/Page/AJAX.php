@@ -943,7 +943,7 @@ LIMIT {$offset}, {$rowCount}
 
     $cacheKeyString   = "merge {$contactType}_{$rgid}_{$gid}";
     $searchRows       = array();
-    $selectorElements = array('is_selected', 'src', 'dst', 'weight', 'actions');
+    $selectorElements = array('is_selected', 'is_selected_input', 'src', 'dst', 'weight', 'actions');
 
     if (CRM_Utils_Array::value('filter', $_REQUEST)) {
       $filter     = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
@@ -993,7 +993,8 @@ LIMIT {$offset}, {$rowCount}
     $count = 0;
     foreach ($dupePairs as $key => $pairInfo) {
       $pair =& $pairInfo['data'];
-      $searchRows[$count]['is_selected'] = "<input type='checkbox' name='pnid_{$pairInfo['prevnext_id']}' value='{$pairInfo['is_selected']}' onclick='toggleDedupeSelect(this)'>";
+      $searchRows[$count]['is_selected'] = $pairInfo['is_selected'];
+      $searchRows[$count]['is_selected_input'] = "<input type='checkbox' class='crm-dedupe-select' name='pnid_{$pairInfo['prevnext_id']}' value='{$pairInfo['is_selected']}' onclick='toggleDedupeSelect(this)'>";
       $searchRows[$count]['src'] = CRM_Utils_System::href($pair['srcName'], 'civicrm/contact/view', "reset=1&cid={$pair['srcID']}");
       $searchRows[$count]['dst'] = CRM_Utils_System::href($pair['dstName'], 'civicrm/contact/view', "reset=1&cid={$pair['dstID']}");
       $searchRows[$count]['weight'] = CRM_Utils_Array::value('weight', $pair);
