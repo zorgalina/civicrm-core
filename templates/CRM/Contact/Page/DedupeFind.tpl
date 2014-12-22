@@ -53,10 +53,10 @@
       </table>
     </div><!-- /.crm-accordion-body -->
   </div><!-- /.crm-accordion-wrapper -->
-  <table id="dupePairs" class='pagerDisplay'>
+  <table id="dupePairs" class="display">
     <thead>
 <!--    <tr class="columnheader"><th class="sortable">{ts}Contact{/ts} 1</th><th id="sortable">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th><th id="sortable">{ts}Threshold{/ts}</th><th id="sortable">&nbsp;</th></tr>-->
-      <tr class="columnheader">
+      <tr> 
         <th class="crm-dedupe-merge">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
@@ -74,7 +74,6 @@
       </tr>
     </tfoot>
   </table>
-  {*include file="CRM/common/jsortable.tpl" sourceUrl=$sourceUrl useAjax=1*}
   {if $cid}
     <table style="width: 45%; float: left; margin: 10px;">
       <tr class="columnheader"><th colspan="2">{ts 1=$main_contacts[$cid]}Merge %1 with{/ts}</th></tr>
@@ -133,11 +132,20 @@ CRM.$(function($) {
       {data: "weight"},
       {data: "actions"},
     ],
+    "columnDefs": [ {
+      "targets": [0, 4],
+      "orderable": false
+    }],
     rowCallback: function (row, data) {
       // Set the checked state of the checkbox in the table
-      $('input.crm-dedupe-select', row).prop( 'checked', data.is_selected == 1 );
+      $('input.crm-dedupe-select', row).prop('checked', data.is_selected == 1);
+      if (data.is_selected == 1) {
+      $(row).toggleClass('selected');
+      }
     }
   });
+
+  // inline search boxes placed in tfoot
   $('#dupePairs tfoot th').each( function () {
     var title = $('#dupePairs thead th').eq($(this).index()).text();
     if (title.length > 1) {
@@ -145,10 +153,10 @@ CRM.$(function($) {
     }
   });
 
-  // DataTable
+  // apply dataTable
   var table = $('#dupePairs').DataTable();
   
-  // Apply the search
+  // apply the search
   $('#dupePairs').DataTable().columns().eq(0).each(function (colIdx) {
     $( 'input', table.column(colIdx).footer()).on( 'keyup change', function () {
       table
@@ -156,6 +164,15 @@ CRM.$(function($) {
         .search(this.value)
         .draw();
     });
+  });
+
+  // apply selected class on click of a row
+  $('#dupePairs tbody').on('click', 'tr', function() {
+    $(this).toggleClass('selected');
+    $('input.crm-dedupe-select', this).prop('checked', $(this).hasClass("selected"));
+    var sth = $('input.crm-dedupe-select', this);
+    console.log(sth);
+    toggleDedupeSelect(sth);
   });
 });
 
