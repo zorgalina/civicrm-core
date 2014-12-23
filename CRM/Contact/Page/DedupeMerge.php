@@ -1,0 +1,117 @@
+<?php
+/*
+ +--------------------------------------------------------------------+
+ | CiviCRM version 4.5                                                |
+ +--------------------------------------------------------------------+
+ | Copyright CiviCRM LLC (c) 2004-2014                                |
+ +--------------------------------------------------------------------+
+ | This file is a part of CiviCRM.                                    |
+ |                                                                    |
+ | CiviCRM is free software; you can copy, modify, and distribute it  |
+ | under the terms of the GNU Affero General Public License           |
+ | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
+ |                                                                    |
+ | CiviCRM is distributed in the hope that it will be useful, but     |
+ | WITHOUT ANY WARRANTY; without even the implied warranty of         |
+ | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
+ | See the GNU Affero General Public License for more details.        |
+ |                                                                    |
+ | You should have received a copy of the GNU Affero General Public   |
+ | License and the CiviCRM Licensing Exception along                  |
+ | with this program; if not, contact CiviCRM LLC                     |
+ | at info[AT]civicrm[DOT]org. If you have questions about the        |
+ | GNU Affero General Public License or the licensing of CiviCRM,     |
+ | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+ +--------------------------------------------------------------------+
+*/
+
+/**
+ *
+ * @package CRM
+ * @copyright CiviCRM LLC (c) 2004-2014
+ * $Id$
+ *
+ */
+class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
+
+  const BATCHLIMIT = 5;
+
+  /**
+   * Browse all rule groups
+   *
+   * @return void
+   * @access public
+   */
+  function run() {
+    $runner = self::getRunner();
+    if ($runner) {
+      // Run Everything in the Queue via the Web.
+      $runner->runAllViaWeb();
+    } else {
+      CRM_Core_Session::setStatus(ts('Nothing to merge.'));
+    }
+
+    // parent run
+    return parent::run();
+  }
+
+  static function getRunner() {
+    $rgid = CRM_Utils_Request::retrieve('rgid', 'Positive', $this, FALSE, 0);
+    $gid  = CRM_Utils_Request::retrieve('gid', 'Positive', $this, FALSE, 0);
+    
+    $contactType = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $rgid, 'contact_type');
+    $cacheKeyString = "merge {$contactType}";
+    $cacheKeyString .= $rgid ? "_{$rgid}" : '_0';
+    $cacheKeyString .= $gid ? "_{$gid}" : '_0';
+
+    // Setup the Queue
+    $queue = CRM_Queue_Service::singleton()->create(array(
+      'name'  => $cacheKeyString,
+      'type'  => 'Sql',
+      'reset' => TRUE,
+    ));
+
+    $total = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString);
+    if ($total <= 0) {
+      // Nothing to do.
+      return FALSE;
+    }
+
+    // reset merge stats, so we compute new stats
+    CRM_Dedupe_Merger::resetMergeStats($cacheKeyString);
+
+    for ($i = 1; $i <= ceil($total/self::BATCHLIMIT); $i++) {
+      $task  = new CRM_Queue_Task(
+        array ('CRM_Contact_Page_DedupeMerge', 'callBatchMerge'),
+        array($rgid, $gid, 'safe', TRUE, self::BATCHLIMIT),
+        "Processed " . $i*self::BATCHLIMIT . " pair of duplicates"
+      );
+
+      // Add the Task to the Queue
+      $queue->createItem($task);
+    }
+
+    $urlQry = "reset=1&action=map&rgid={$rgid}";
+    $urlQry = $gid ? ($urlQry . "&gid={$gid}") : $urlQry;
+
+    // Setup the Runner
+    $runner = new CRM_Queue_Runner(array(
+      'title' => ts('Merging Duplicates..'),
+      'queue' => $queue,
+      'errorMode'=> CRM_Queue_Runner::ERROR_ABORT,
+      'onEndUrl' => CRM_Utils_System::url('civicrm/contact/dedupefind', $urlQry, TRUE, NULL, FALSE),
+    ));
+
+    return $runner;
+  }
+
+  /**
+   * Collect Mailchimp data into temporary working table.
+   */
+  static function callBatchMerge(CRM_Queue_TaskContext $ctx, $rgid, $gid = NULL, $mode = 'safe', $autoFlip = TRUE, $batchLimit = 1) {
+    $result = CRM_Dedupe_Merger::batchMerge($rgid, $gid, $mode, $autoFlip, $batchLimit);
+
+    return CRM_Queue_Task::TASK_SUCCESS;
+  }
+}
+

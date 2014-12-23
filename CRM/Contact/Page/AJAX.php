@@ -930,7 +930,7 @@ LIMIT {$offset}, {$rowCount}
 
   static function getDedupes() {
     $offset    = isset($_REQUEST['iDisplayStart']) ? CRM_Utils_Type::escape($_REQUEST['iDisplayStart'], 'Integer') : 0;
-    $rowCount  = isset($_REQUEST['iDisplayLength']) ? CRM_Utils_Type::escape($_REQUEST['iDisplayLength'], 'Integer') : 25;
+    //$rowCount  = isset($_REQUEST['iDisplayLength']) ? CRM_Utils_Type::escape($_REQUEST['iDisplayLength'], 'Integer') : 25;
     $sort      = 'sort_name';
     $sortOrder = isset($_REQUEST['sSortDir_0']) ? CRM_Utils_Type::escape($_REQUEST['sSortDir_0'], 'String') : 'asc';
 
@@ -1134,8 +1134,9 @@ LIMIT {$offset}, {$rowCount}
       2 => array($pnid, 'Integer'),
       3 => array($cacheKeyString, 'String')
     );
-    $result = CRM_Core_DAO::executeQuery($sql, $params);
-    CRM_Utils_JSON::output($result);
+    CRM_Core_DAO::executeQuery($sql, $params);
+
+    CRM_Utils_System::civiExit();
   }
 
   /**
