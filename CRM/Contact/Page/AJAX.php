@@ -987,13 +987,15 @@ LIMIT {$offset}, {$rowCount}
 
     $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND pn.entity_id2 = de.contact_id2 )";
     
+    
+    $selectColumns  = array();
     $select = array(
-      'src_email'     => 'ce1.email as src_email',
-      'dst_email'     => 'ce2.email as dst_email',
-      'src_postcode'  => 'ca1.postal_code as src_postcode', 
-      'dst_postcode'  => 'ca2.postal_code as dst_postcode',
-      'src_street'    => 'ca1.street_address as src_street',
-      'dst_street'    => 'ca2.street_address as dst_street'
+      'ce1.email'           => 'src_email',
+      'ce2.email'           => 'dst_email',
+      'ca1.postal_code'     => 'src_postcode', 
+      'ca2.postal_code'     => 'dst_postcode',
+      'ca1.street_address'  => 'src_street',
+      'ca2.street_address'  => 'dst_street'
     );
    
     $iFilteredTotal = $iTotal = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, $join, $where);

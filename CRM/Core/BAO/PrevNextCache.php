@@ -171,12 +171,16 @@ WHERE  cacheKey     = %3 AND
    * @return array
    */
   static function retrieve($cacheKey, $join = NULL, $where = NULL, $offset = 0, $rowCount = 0, $select = array()) {
- 
-    if($select) {
-      $selectString .= implode(' , ', $select)." , ";
+    $selectString = 'pn.*';
+    if(!empty($select)) {
+      $aliasArray = array();
+      foreach ($select as $column => $alias) {
+        $aliasArray[] = $column.' as '.$alias;
+      }
+      $selectString .= " , ".implode(' , ', $aliasArray);
     }
     $query = "
-SELECT {$selectString}pn.*
+SELECT {$selectString}
 FROM   civicrm_prevnext_cache pn
        {$join}
 WHERE  cacheKey = %1
@@ -206,10 +210,10 @@ WHERE  cacheKey = %1
         $main[$count] = $dao->data;
       }
 
-      if ($select) {
+      if (!empty($select)) {
         $extraData = array();
         foreach ($select as $dfield => $sfield) {
-          $extraData[$dfield]  = $dao->$dfield;
+          $extraData[$sfield]  = $dao->$sfield;
         }
         $main[$count] = array_merge($main[$count], $extraData);
         $main[$count] = array(
