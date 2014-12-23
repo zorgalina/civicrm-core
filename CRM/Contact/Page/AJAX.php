@@ -986,9 +986,25 @@ LIMIT {$offset}, {$rowCount}
     }
 
     $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND pn.entity_id2 = de.contact_id2 )";
-
+    
+    $returnValues = array(
+      'ce1.email as src_email',
+      'ce2.email as dst_email',
+      'ca1.postal_code as src_postcode', 
+      'ca2.postal_code as dst_postcode',
+      'ca1.street_address as src_street',
+      'ca2.street_address as dst_street');
+    
     $iFilteredTotal = $iTotal = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, $join, $where);
-    $dupePairs = CRM_Core_BAO_PrevNextCache::retrieveExtraData($cacheKeyString, $join, $where, $offset, $rowCount, TRUE);
+    $select = '';
+    if($returnValues) {
+      $join .= " LEFT JOIN civicrm_email ce1 ON (ce1.contact_id = pn.entity_id1 AND ce1.is_primary = 1 )";
+      $join .= " LEFT JOIN civicrm_email ce2 ON (ce2.contact_id = pn.entity_id2 AND ce2.is_primary = 1 )";
+      $join .= " LEFT JOIN civicrm_address ca1 ON (ca1.contact_id = pn.entity_id1 AND ca1.is_primary = 1 )";
+      $join .= " LEFT JOIN civicrm_address ca2 ON (ca2.contact_id = pn.entity_id2 AND ca2.is_primary = 1 )";
+      $select .= implode(' , ', $returnValues)." , ";
+    }
+    $dupePairs = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount, $select);
 
     $count = 0;
     foreach ($dupePairs as $key => $pairInfo) {
@@ -996,13 +1012,13 @@ LIMIT {$offset}, {$rowCount}
       $searchRows[$count]['is_selected'] = $pairInfo['is_selected'];
       $searchRows[$count]['is_selected_input'] = "<input type='checkbox' class='crm-dedupe-select' name='pnid_{$pairInfo['prevnext_id']}' value='{$pairInfo['is_selected']}' onclick='toggleDedupeSelect(this)'>";
       $searchRows[$count]['src'] = CRM_Utils_System::href($pair['srcName'], 'civicrm/contact/view', "reset=1&cid={$pair['srcID']}");
-      $searchRows[$count]['src_email'] = CRM_Utils_Array::value('email1', $pair);
-      $searchRows[$count]['src_street'] = CRM_Utils_Array::value('street1', $pair);
-      $searchRows[$count]['src_postcode'] = CRM_Utils_Array::value('postcode1', $pair);
+      $searchRows[$count]['src_email'] = CRM_Utils_Array::value('src_email', $pair);
+      $searchRows[$count]['src_street'] = CRM_Utils_Array::value('src_street', $pair);
+      $searchRows[$count]['src_postcode'] = CRM_Utils_Array::value('src_postcode', $pair);
       $searchRows[$count]['dst'] = CRM_Utils_System::href($pair['dstName'], 'civicrm/contact/view', "reset=1&cid={$pair['dstID']}");
-      $searchRows[$count]['dst_email'] = CRM_Utils_Array::value('email2', $pair);
-      $searchRows[$count]['dst_street'] = CRM_Utils_Array::value('street2', $pair);
-      $searchRows[$count]['dst_postcode'] = CRM_Utils_Array::value('postcode2', $pair);
+      $searchRows[$count]['dst_email'] = CRM_Utils_Array::value('dst_email', $pair);
+      $searchRows[$count]['dst_street'] = CRM_Utils_Array::value('dst_street', $pair);
+      $searchRows[$count]['dst_postcode'] = CRM_Utils_Array::value('dst_postcode', $pair);
       $searchRows[$count]['weight'] = CRM_Utils_Array::value('weight', $pair);
 
       if (!empty($pair['canMerge'])) {

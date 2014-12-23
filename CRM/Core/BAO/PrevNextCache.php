@@ -170,9 +170,9 @@ WHERE  cacheKey     = %3 AND
    *
    * @return array
    */
-  static function retrieve($cacheKey, $join = NULL, $where = NULL, $offset = 0, $rowCount = 0, $moreThanData = FALSE) {
+  static function retrieve($cacheKey, $join = NULL, $where = NULL, $offset = 0, $rowCount = 0, $select = NULL) {
     $query = "
-SELECT pn.*
+SELECT {$select}pn.*
 FROM   civicrm_prevnext_cache pn
        {$join}
 WHERE  cacheKey = %1
@@ -202,7 +202,16 @@ WHERE  cacheKey = %1
         $main[$count] = $dao->data;
       }
 
-      if ($moreThanData) {
+      if ($select) {
+        $extraData = array(
+          'src_email'    => $dao->src_email,
+          'dst_email'    => $dao->dst_email,
+          'src_postcode' => $dao->src_postcode,
+          'dst_postcode' => $dao->dst_postcode,
+          'src_street'   => $dao->src_street,
+          'dst_street'   => $dao->dst_street,
+        );
+        $main[$count] = array_merge($main[$count], $extraData);
         $main[$count] = array(
           'prevnext_id' => $dao->id, 
           'is_selected' => $dao->is_selected, 
@@ -216,65 +225,7 @@ WHERE  cacheKey = %1
 
     return $main;
   }
-  
-  static function retrieveExtraData($cacheKey, $join = NULL, $where = NULL, $offset = 0, $rowCount = 0, $moreThanData = FALSE) {
-    $query = "
-      SELECT ce1.email as email1, ce2.email as email2, ca1.postal_code as postcode1, ca2.postal_code as postcode2, ca1.street_address as street1, ca2.street_address as street2, pn.*
-      FROM   civicrm_prevnext_cache pn
-        {$join}
-        LEFT JOIN civicrm_email ce1 ON ce1.contact_id = pn.entity_id1 AND ce1.is_primary = 1
-        LEFT JOIN civicrm_email ce2 ON ce2.contact_id = pn.entity_id2 AND ce2.is_primary = 1
-        LEFT JOIN civicrm_address ca1 ON ca1.contact_id = pn.entity_id1 AND ca1.is_primary = 1
-        LEFT JOIN civicrm_address ca2 ON ca2.contact_id = pn.entity_id2 AND ca2.is_primary = 1
-        WHERE  cacheKey = %1
-    ";
-    $params = array(1 => array($cacheKey, 'String'));
-    if ($where) {
-      $query .= " AND {$where}";
-    }
-    if ($rowCount) {
-      $offset = CRM_Utils_Type::escape($offset, 'Int');
-      $rowCount = CRM_Utils_Type::escape($rowCount, 'Int');
-      $query .= " LIMIT {$offset}, {$rowCount}";
-    }
-    $dao = CRM_Core_DAO::executeQuery($query, $params);
-    $main  = array();
-    $count = 0;
-    
-    while ($dao->fetch()) {
-      if (self::is_serialized($dao->data)) {
-        $main[$count] = unserialize($dao->data);
-      }
-      else {
-        $main[$count] = $dao->data;
-      }
-      if ($main[$count]) {
-        $emailArray = array(
-          'email1'    => $dao->email1,
-          'email2'    => $dao->email2,
-          'postcode1' => $dao->postcode1,
-          'postcode2' => $dao->postcode2,
-          'street1'   => $dao->street1,
-          'street2'   => $dao->street2,
-        );
-        $main[$count] = array_merge($main[$count], $emailArray);
-      }
-      if ($moreThanData) {
-        $main[$count] = array(
-          'prevnext_id' => $dao->id, 
-          'is_selected' => $dao->is_selected, 
-          'entity_id1'  => $dao->entity_id1, 
-          'entity_id2'  => $dao->entity_id2, 
-          'data'        => $main[$count],
-        );
-      }
-      $count++;
-    }
-
-    CRM_Core_Error::debug_var('$main', $main);
-    return $main;
-  }
-
+ 
   /**
    * @param $string
    *
