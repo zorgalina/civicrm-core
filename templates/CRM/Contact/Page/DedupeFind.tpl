@@ -59,7 +59,13 @@
       <tr> 
         <th class="crm-dedupe-merge">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
+        <th class="crm-contact">{ts}Email{/ts} 1</th>
+        <th class="crm-contact">{ts}Street Address{/ts} 1</th>
+        <th class="crm-contact">{ts}Postcode{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-duplicate">{ts}Postcode{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-threshold">{ts}Threshold{/ts}</th>
         <th class="crm-empty">&nbsp;</th>
       </tr>
@@ -68,7 +74,13 @@
       <tr class="columnfooter">
         <th class="crm-dedupe-merge">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
+        <th class="crm-contact">{ts}Email{/ts} 1</th>
+        <th class="crm-contact">{ts}Street Address{/ts} 1</th>
+        <th class="crm-contact">{ts}Postcode{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-duplicate">{ts}Postcode{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-threshold">{ts}Threshold{/ts}</th>
         <th class="crm-empty">&nbsp;</th>
       </tr>
@@ -128,7 +140,13 @@ CRM.$(function($) {
     "columns"  : [
       {data: "is_selected_input"},
       {data: "src"},
+      {data: "src_email"},
+      {data: "src_street"},
+      {data: "src_postcode"},
       {data: "dst"},
+      {data: "dst_email"},
+      {data: "dst_street"},
+      {data: "dst_postcode"},
       {data: "weight"},
       {data: "actions"},
     ],
