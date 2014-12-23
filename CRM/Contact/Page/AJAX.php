@@ -943,7 +943,7 @@ LIMIT {$offset}, {$rowCount}
 
     $cacheKeyString   = "merge {$contactType}_{$rgid}_{$gid}";
     $searchRows       = array();
-    $selectorElements = array('is_selected', 'is_selected_input', 'src', 'src_email', 'src_street', 'src_postcode', 'dst', 'dst_email', 'dst_street', 'dst_postcode', 'weight', 'actions');
+    $selectorElements = array('is_selected', 'is_selected_input', 'src_image', 'src', 'src_email', 'src_street', 'src_postcode', 'dst_image', 'dst', 'dst_email', 'dst_street', 'dst_postcode', 'weight', 'actions');
 
     if (CRM_Utils_Array::value('filter', $_REQUEST)) {
       $filter     = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
@@ -989,6 +989,10 @@ LIMIT {$offset}, {$rowCount}
     
     
     $select = array(
+      'cc1.contact_type'    => 'src_contact_type',
+      'cc1.contact_sub_type'=> 'src_contact_sub_type',
+      'cc2.contact_type'    => 'dst_contact_type',
+      'cc2.contact_sub_type'=> 'dst_contact_sub_type',
       'ce1.email'           => 'src_email',
       'ce2.email'           => 'dst_email',
       'ca1.postal_code'     => 'src_postcode', 
@@ -1003,18 +1007,37 @@ LIMIT {$offset}, {$rowCount}
       $join .= " LEFT JOIN civicrm_email ce2 ON (ce2.contact_id = pn.entity_id2 AND ce2.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_address ca1 ON (ca1.contact_id = pn.entity_id1 AND ca1.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_address ca2 ON (ca2.contact_id = pn.entity_id2 AND ca2.is_primary = 1 )";
+      $join .= " LEFT JOIN civicrm_contact cc1 ON cc1.id = pn.entity_id1";
+      $join .= " LEFT JOIN civicrm_contact cc2 ON cc2.id = pn.entity_id2";
     }
     $dupePairs = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount, $select);
 
     $count = 0;
     foreach ($dupePairs as $key => $pairInfo) {
       $pair =& $pairInfo['data'];
+      $srcContactSubType  = CRM_Utils_Array::value('src_contact_sub_type', $pairInfo);
+      $srcContactType     = CRM_Utils_Array::value('src_contact_type', $pairInfo);
+      $dstContactSubType  = CRM_Utils_Array::value('dst_contact_sub_type', $pairInfo);
+      $dstContactType     = CRM_Utils_Array::value('dst_contact_type', $pairInfo);
+      $srcTypeImage = CRM_Contact_BAO_Contact_Utils::getImage($srcContactSubType ?
+        $srcContactSubType : $srcContactType,
+        FALSE,
+        $pair['srcID']
+      );
+      $dstTypeImage = CRM_Contact_BAO_Contact_Utils::getImage($dstContactSubType ?
+        $dstContactSubType : $dstContactType,
+        FALSE,
+        $pair['dstID']
+      );
+      
       $searchRows[$count]['is_selected'] = $pairInfo['is_selected'];
       $searchRows[$count]['is_selected_input'] = "<input type='checkbox' class='crm-dedupe-select' name='pnid_{$pairInfo['prevnext_id']}' value='{$pairInfo['is_selected']}' onclick='toggleDedupeSelect(this)'>";
+      $searchRows[$count]['src_image'] = $srcTypeImage;
       $searchRows[$count]['src'] = CRM_Utils_System::href($pair['srcName'], 'civicrm/contact/view', "reset=1&cid={$pair['srcID']}");
       $searchRows[$count]['src_email'] = CRM_Utils_Array::value('src_email', $pairInfo);
       $searchRows[$count]['src_street'] = CRM_Utils_Array::value('src_street', $pairInfo);
       $searchRows[$count]['src_postcode'] = CRM_Utils_Array::value('src_postcode', $pairInfo);
+      $searchRows[$count]['dst_image'] = $dstTypeImage;
       $searchRows[$count]['dst'] = CRM_Utils_System::href($pair['dstName'], 'civicrm/contact/view', "reset=1&cid={$pair['dstID']}");
       $searchRows[$count]['dst_email'] = CRM_Utils_Array::value('dst_email', $pairInfo);
       $searchRows[$count]['dst_street'] = CRM_Utils_Array::value('dst_street', $pairInfo);

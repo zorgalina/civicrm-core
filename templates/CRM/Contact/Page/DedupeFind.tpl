@@ -58,10 +58,12 @@
 <!--    <tr class="columnheader"><th class="sortable">{ts}Contact{/ts} 1</th><th id="sortable">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th><th id="sortable">{ts}Threshold{/ts}</th><th id="sortable">&nbsp;</th></tr>-->
       <tr> 
         <th class="crm-dedupe-merge">&nbsp;</th>
+        <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
         <th class="crm-contact">{ts}Email{/ts} 1</th>
         <th class="crm-contact">{ts}Street Address{/ts} 1</th>
         <th class="crm-contact">{ts}Postcode{/ts} 1</th>
+        <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
@@ -73,10 +75,12 @@
     <tfoot>
       <tr class="columnfooter">
         <th class="crm-dedupe-merge">&nbsp;</th>
+        <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
         <th class="crm-contact">{ts}Email{/ts} 1</th>
         <th class="crm-contact">{ts}Street Address{/ts} 1</th>
         <th class="crm-contact">{ts}Postcode{/ts} 1</th>
+        <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
@@ -139,10 +143,12 @@ CRM.$(function($) {
     "ajax": sourceUrl,
     "columns"  : [
       {data: "is_selected_input"},
+      {data: "src_image"},
       {data: "src"},
       {data: "src_email"},
       {data: "src_street"},
       {data: "src_postcode"},
+      {data: "dst_image"},
       {data: "dst"},
       {data: "dst_email"},
       {data: "dst_street"},
