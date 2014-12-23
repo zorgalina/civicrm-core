@@ -215,7 +215,6 @@ WHERE  cacheKey = %1
         foreach ($select as $dfield => $sfield) {
           $extraData[$sfield]  = $dao->$sfield;
         }
-        $main[$count] = array_merge($main[$count], $extraData);
         $main[$count] = array(
           'prevnext_id' => $dao->id, 
           'is_selected' => $dao->is_selected, 
@@ -223,6 +222,7 @@ WHERE  cacheKey = %1
           'entity_id2'  => $dao->entity_id2, 
           'data'        => $main[$count],
         );
+        $main[$count] = array_merge($main[$count], $extraData);
       }
       $count++;
     }

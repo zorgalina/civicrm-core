@@ -988,7 +988,6 @@ LIMIT {$offset}, {$rowCount}
     $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND pn.entity_id2 = de.contact_id2 )";
     
     
-    $selectColumns  = array();
     $select = array(
       'ce1.email'           => 'src_email',
       'ce2.email'           => 'dst_email',
@@ -1013,13 +1012,13 @@ LIMIT {$offset}, {$rowCount}
       $searchRows[$count]['is_selected'] = $pairInfo['is_selected'];
       $searchRows[$count]['is_selected_input'] = "<input type='checkbox' class='crm-dedupe-select' name='pnid_{$pairInfo['prevnext_id']}' value='{$pairInfo['is_selected']}' onclick='toggleDedupeSelect(this)'>";
       $searchRows[$count]['src'] = CRM_Utils_System::href($pair['srcName'], 'civicrm/contact/view', "reset=1&cid={$pair['srcID']}");
-      $searchRows[$count]['src_email'] = CRM_Utils_Array::value('src_email', $pair);
-      $searchRows[$count]['src_street'] = CRM_Utils_Array::value('src_street', $pair);
-      $searchRows[$count]['src_postcode'] = CRM_Utils_Array::value('src_postcode', $pair);
+      $searchRows[$count]['src_email'] = CRM_Utils_Array::value('src_email', $pairInfo);
+      $searchRows[$count]['src_street'] = CRM_Utils_Array::value('src_street', $pairInfo);
+      $searchRows[$count]['src_postcode'] = CRM_Utils_Array::value('src_postcode', $pairInfo);
       $searchRows[$count]['dst'] = CRM_Utils_System::href($pair['dstName'], 'civicrm/contact/view', "reset=1&cid={$pair['dstID']}");
-      $searchRows[$count]['dst_email'] = CRM_Utils_Array::value('dst_email', $pair);
-      $searchRows[$count]['dst_street'] = CRM_Utils_Array::value('dst_street', $pair);
-      $searchRows[$count]['dst_postcode'] = CRM_Utils_Array::value('dst_postcode', $pair);
+      $searchRows[$count]['dst_email'] = CRM_Utils_Array::value('dst_email', $pairInfo);
+      $searchRows[$count]['dst_street'] = CRM_Utils_Array::value('dst_street', $pairInfo);
+      $searchRows[$count]['dst_postcode'] = CRM_Utils_Array::value('dst_postcode', $pairInfo);
       $searchRows[$count]['weight'] = CRM_Utils_Array::value('weight', $pair);
 
       if (!empty($pair['canMerge'])) {
