@@ -1003,12 +1003,12 @@ LIMIT {$offset}, {$rowCount}
    
     $iFilteredTotal = $iTotal = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, $join, $where);
     if($select) {
+      $join .= " INNER JOIN civicrm_contact cc1 ON cc1.id = pn.entity_id1";
+      $join .= " INNER JOIN civicrm_contact cc2 ON cc2.id = pn.entity_id2";
       $join .= " LEFT JOIN civicrm_email ce1 ON (ce1.contact_id = pn.entity_id1 AND ce1.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_email ce2 ON (ce2.contact_id = pn.entity_id2 AND ce2.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_address ca1 ON (ca1.contact_id = pn.entity_id1 AND ca1.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_address ca2 ON (ca2.contact_id = pn.entity_id2 AND ca2.is_primary = 1 )";
-      $join .= " LEFT JOIN civicrm_contact cc1 ON cc1.id = pn.entity_id1";
-      $join .= " LEFT JOIN civicrm_contact cc2 ON cc2.id = pn.entity_id2";
     }
     $dupePairs = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount, $select);
 
@@ -1016,16 +1016,14 @@ LIMIT {$offset}, {$rowCount}
     foreach ($dupePairs as $key => $pairInfo) {
       $pair =& $pairInfo['data'];
       $srcContactSubType  = CRM_Utils_Array::value('src_contact_sub_type', $pairInfo);
-      $srcContactType     = CRM_Utils_Array::value('src_contact_type', $pairInfo);
       $dstContactSubType  = CRM_Utils_Array::value('dst_contact_sub_type', $pairInfo);
-      $dstContactType     = CRM_Utils_Array::value('dst_contact_type', $pairInfo);
       $srcTypeImage = CRM_Contact_BAO_Contact_Utils::getImage($srcContactSubType ?
-        $srcContactSubType : $srcContactType,
+        $srcContactSubType : $pairInfo['src_contact_type'],
         FALSE,
         $pair['srcID']
       );
       $dstTypeImage = CRM_Contact_BAO_Contact_Utils::getImage($dstContactSubType ?
-        $dstContactSubType : $dstContactType,
+        $dstContactSubType : $pairInfo['dst_contact_type'],
         FALSE,
         $pair['dstID']
       );
