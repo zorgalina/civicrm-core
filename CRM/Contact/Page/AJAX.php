@@ -987,22 +987,21 @@ LIMIT {$offset}, {$rowCount}
 
     $join .= " LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND pn.entity_id2 = de.contact_id2 )";
     
-    $returnValues = array(
-      'ce1.email as src_email',
-      'ce2.email as dst_email',
-      'ca1.postal_code as src_postcode', 
-      'ca2.postal_code as dst_postcode',
-      'ca1.street_address as src_street',
-      'ca2.street_address as dst_street');
-    
+    $select = array(
+      'src_email'     => 'ce1.email as src_email',
+      'dst_email'     => 'ce2.email as dst_email',
+      'src_postcode'  => 'ca1.postal_code as src_postcode', 
+      'dst_postcode'  => 'ca2.postal_code as dst_postcode',
+      'src_street'    => 'ca1.street_address as src_street',
+      'dst_street'    => 'ca2.street_address as dst_street'
+    );
+   
     $iFilteredTotal = $iTotal = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, $join, $where);
-    $select = '';
-    if($returnValues) {
+    if($select) {
       $join .= " LEFT JOIN civicrm_email ce1 ON (ce1.contact_id = pn.entity_id1 AND ce1.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_email ce2 ON (ce2.contact_id = pn.entity_id2 AND ce2.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_address ca1 ON (ca1.contact_id = pn.entity_id1 AND ca1.is_primary = 1 )";
       $join .= " LEFT JOIN civicrm_address ca2 ON (ca2.contact_id = pn.entity_id2 AND ca2.is_primary = 1 )";
-      $select .= implode(' , ', $returnValues)." , ";
     }
     $dupePairs = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where, $offset, $rowCount, $select);
 
