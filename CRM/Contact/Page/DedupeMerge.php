@@ -58,7 +58,8 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
   static function getRunner() {
     $rgid = CRM_Utils_Request::retrieve('rgid', 'Positive', $this, FALSE, 0);
     $gid  = CRM_Utils_Request::retrieve('gid', 'Positive', $this, FALSE, 0);
-    
+    $action = CRM_Utils_Request::retrieve('action', 'String', CRM_Core_DAO::$_nullObject);
+
     $contactType = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $rgid, 'contact_type');
     $cacheKeyString = "merge {$contactType}";
     $cacheKeyString .= $rgid ? "_{$rgid}" : '_0';
@@ -71,7 +72,16 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
       'reset' => TRUE,
     ));
 
-    $total = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString);
+    $where = NULL;
+    if ($action == CRM_Core_Action::MAP) {
+      $where = "pn.is_selected = 1";
+      $isSelected = 1;
+    } else {
+      // else merge all (2)
+      $isSelected = 2; 
+    }
+
+    $total = CRM_Core_BAO_PrevNextCache::getCount($cacheKeyString, NULL, $where);
     if ($total <= 0) {
       // Nothing to do.
       return FALSE;
@@ -83,7 +93,7 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
     for ($i = 1; $i <= ceil($total/self::BATCHLIMIT); $i++) {
       $task  = new CRM_Queue_Task(
         array ('CRM_Contact_Page_DedupeMerge', 'callBatchMerge'),
-        array($rgid, $gid, 'safe', TRUE, self::BATCHLIMIT),
+        array($rgid, $gid, 'safe', TRUE, self::BATCHLIMIT, $isSelected),
         "Processed " . $i*self::BATCHLIMIT . " pair of duplicates"
       );
 
@@ -108,8 +118,8 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
   /**
    * Collect Mailchimp data into temporary working table.
    */
-  static function callBatchMerge(CRM_Queue_TaskContext $ctx, $rgid, $gid = NULL, $mode = 'safe', $autoFlip = TRUE, $batchLimit = 1) {
-    $result = CRM_Dedupe_Merger::batchMerge($rgid, $gid, $mode, $autoFlip, $batchLimit);
+  static function callBatchMerge(CRM_Queue_TaskContext $ctx, $rgid, $gid = NULL, $mode = 'safe', $autoFlip = TRUE, $batchLimit = 1, $isSelected = 2) {
+    $result = CRM_Dedupe_Merger::batchMerge($rgid, $gid, $mode, $autoFlip, $batchLimit, $isSelected);
 
     return CRM_Queue_Task::TASK_SUCCESS;
   }

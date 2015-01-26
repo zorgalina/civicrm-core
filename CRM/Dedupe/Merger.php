@@ -570,7 +570,7 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
    * @static
    * @access public
    */
-  static function batchMerge($rgid, $gid = NULL, $mode = 'safe', $autoFlip = TRUE, $batchLimit = 1) {
+  static function batchMerge($rgid, $gid = NULL, $mode = 'safe', $autoFlip = TRUE, $batchLimit = 1, $isSelected = 2) {
     $contactType = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $rgid, 'contact_type');
     $cacheKeyString = "merge {$contactType}";
     $cacheKeyString .= $rgid ? "_{$rgid}" : '_0';
@@ -578,11 +578,16 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
     $join = "LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND
                                                              pn.entity_id2 = de.contact_id2 )";
 
-    $where = "de.id IS NULL LIMIT {$batchLimit}";
+    $where = "de.id IS NULL";
+    if ($isSelected === 0 || $isSelected === 1) {
+      $where .= " AND pn.is_selected = {$isSelected}";
+    }// else consider all dupe pairs
+    $where .= " LIMIT {$batchLimit}";
+
     $redirectForPerformance = ($batchLimit > 1) ? TRUE : FALSE;
 
     $dupePairs = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where);
-    if (empty($dupePairs) && !$redirectForPerformance) {
+    if (empty($dupePairs) && !$redirectForPerformance && $isSelected == 2) {
       // If we haven't found any dupes, probably cache is empty.
       // Try filling cache and give another try.
       CRM_Core_BAO_PrevNextCache::refillCache($rgid, $gid, $cacheKeyString);
@@ -606,7 +611,7 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
       return;
     }
 
-    // update with previous stats
+    // get previous stats
     $previousStats = CRM_Core_BAO_PrevNextCache::retrieve("{$cacheKeyString}_stats");
     if (!empty($previousStats)) {
       if ($previousStats[0]['merged']) {
@@ -617,7 +622,10 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
       }
     }
 
-    // store the update stats
+    // delete old stats
+    CRM_Dedupe_Merger::resetMergeStats($cacheKeyString);
+
+    // store the updated stats
     $data = array(
       'merged'  => $merged,
       'skipped' => $skipped,
