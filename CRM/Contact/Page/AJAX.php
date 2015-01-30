@@ -943,7 +943,7 @@ LIMIT {$offset}, {$rowCount}
 
     $cacheKeyString   = "merge {$contactType}_{$rgid}_{$gid}";
     $searchRows       = array();
-    $selectorElements = array('is_selected', 'is_selected_input', 'src_image', 'src', 'src_email', 'src_street', 'src_postcode', 'dst_image', 'dst', 'dst_email', 'dst_street', 'dst_postcode', 'weight', 'actions');
+    $selectorElements = array('is_selected', 'is_selected_input', 'src_image', 'src', 'src_email', 'src_street', 'src_postcode', 'dst_image', 'dst', 'dst_email', 'dst_street', 'dst_postcode', 'conflicts', 'weight', 'actions');
 
     if (CRM_Utils_Array::value('filter', $_REQUEST)) {
       $filter     = CRM_Utils_Type::escape($_REQUEST['filter'], 'String');
@@ -1040,6 +1040,7 @@ LIMIT {$offset}, {$rowCount}
       $searchRows[$count]['dst_email'] = CRM_Utils_Array::value('dst_email', $pairInfo);
       $searchRows[$count]['dst_street'] = CRM_Utils_Array::value('dst_street', $pairInfo);
       $searchRows[$count]['dst_postcode'] = CRM_Utils_Array::value('dst_postcode', $pairInfo);
+      $searchRows[$count]['conflicts'] = CRM_Utils_Array::value('conflicts', $pair);
       $searchRows[$count]['weight'] = CRM_Utils_Array::value('weight', $pair);
 
       if (!empty($pair['canMerge'])) {
@@ -1132,7 +1133,7 @@ LIMIT {$offset}, {$rowCount}
     $params = array( 
       1 => array($isSelected, 'Boolean'),
       2 => array($pnid, 'Integer'),
-      3 => array($cacheKeyString, 'String')
+      3 => array("$cacheKeyString%", 'String') // using % to address rows with conflicts as well
     );
     CRM_Core_DAO::executeQuery($sql, $params);
 

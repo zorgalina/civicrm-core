@@ -700,7 +700,8 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
         $migrationInfo['rows'] = &$rowsElementsAndInfo['rows'];
 
         // go ahead with merge if there is no conflict
-        if (!CRM_Dedupe_Merger::skipMerge($mainId, $otherId, $migrationInfo, $mode)) {
+        $conflicts = array();
+        if (!CRM_Dedupe_Merger::skipMerge($mainId, $otherId, $migrationInfo, $mode, $conflicts)) {
           CRM_Dedupe_Merger::moveAllBelongings($mainId, $otherId, $migrationInfo);
           $resultStats['merged'][] = array('main_id' => $mainId, 'other_id' => $otherId);
         }
@@ -708,10 +709,14 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
           $resultStats['skipped'][] = array('main_id' => $mainId, 'other_id' => $otherId);
         }
 
-        // delete entry from PrevNextCache table so we don't consider the pair next time
-        // pair may have been flipped, so make sure we delete using both orders
-        CRM_Core_BAO_PrevNextCache::deletePair($mainId, $otherId, $cacheKeyString);
-        CRM_Core_BAO_PrevNextCache::deletePair($otherId, $mainId, $cacheKeyString);
+        // store  any conflicts
+        if (!empty($conflicts)) {
+          CRM_Core_BAO_PrevNextCache::markConflict($mainId, $otherId, $cacheKeyString, $conflicts);
+        } else {
+          // delete entry from PrevNextCache table so we don't consider the pair next time
+          // pair may have been flipped, so make sure we delete using both orders
+          CRM_Core_BAO_PrevNextCache::deletePair($mainId, $otherId, $cacheKeyString, TRUE);
+        }
 
         CRM_Core_DAO::freeResult();
         unset($rowsElementsAndInfo, $migrationInfo);
@@ -749,8 +754,8 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
    * @static
    * @access public
    */
-  static function skipMerge($mainId, $otherId, &$migrationInfo, $mode = 'safe') {
-    $conflicts = array();
+  static function skipMerge($mainId, $otherId, &$migrationInfo, $mode = 'safe', &$conflicts = array()) {
+    //$conflicts = array();
     $migrationData = array(
       'old_migration_info' => $migrationInfo,
       'mode' => $mode,
@@ -835,7 +840,7 @@ INNER JOIN  civicrm_membership membership2 ON membership1.membership_type_id = m
     if (!empty($conflicts)) {
       foreach ($conflicts as $key => $val) {
         if ($val === NULL and $mode == 'safe') {
-          // un-resolved conflicts still present. Lets skip this merge.
+          // un-resolved conflicts still present. Lets skip this merge after saving the conflict / reason.
           return TRUE;
         }
         else {

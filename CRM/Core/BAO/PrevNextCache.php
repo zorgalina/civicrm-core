@@ -155,10 +155,46 @@ WHERE  cacheKey     = %3 AND
 
     if (isset($cacheKey)) {
       $sql .= " AND cacheKey LIKE %4";
-      $params[4] = array("{$cacheKey}%", 'String');
+      $params[4] = array("{$cacheKey}%", 'String'); // used % to address any row with conflict-cacheKey e.g "merge Individual_8_0_conflicts"
     }
 
     CRM_Core_DAO::executeQuery($sql, $params);
+  }
+
+  static function markConflict($id1, $id2, $cacheKey, $conflicts) {
+    if (empty($cacheKey) || empty($conflicts)) {
+      return FALSE;
+    }
+
+    $sql  = "SELECT pn.* 
+      FROM  civicrm_prevnext_cache pn
+      WHERE 
+      ((pn.entity_id1 = %1 AND pn.entity_id2 = %2) OR (pn.entity_id1 = %2 AND pn.entity_id2 = %1)) AND 
+      (cacheKey = %3 OR cacheKey = %4)";
+    $params = array(
+      1 => array($id1, 'Integer'),
+      2 => array($id2, 'Integer'),
+      3 => array("{$cacheKey}", 'String'),
+      4 => array("{$cacheKey}_conflicts", 'String'),
+    );
+    $pncFind = CRM_Core_DAO::executeQuery($sql, $params);
+
+    while ($pncFind->fetch()) {
+      $data = $pncFind->data;
+      if (!empty($data)) {
+        $data = unserialize($data);
+        $data['conflicts'] = implode(",", array_keys($conflicts));
+
+        $pncUp = new CRM_Core_DAO_PrevNextCache();
+        $pncUp->id = $pncFind->id;
+        if ($pncUp->find(TRUE)) {
+          $pncUp->data     = serialize($data);
+          $pncUp->cacheKey = "{$cacheKey}_conflicts";
+          $pncUp->save();
+        }
+      }
+    }
+    return TRUE;
   }
 
   /**
@@ -183,9 +219,12 @@ WHERE  cacheKey     = %3 AND
 SELECT {$selectString}
 FROM   civicrm_prevnext_cache pn
        {$join}
-WHERE  cacheKey = %1
+WHERE  (pn.cacheKey = %1 OR pn.cacheKey = %2)
 ";
-    $params = array(1 => array($cacheKey, 'String'));
+    $params = array(
+      1 => array($cacheKey, 'String'),
+      2 => array("{$cacheKey}_conflicts", 'String')
+    );
 
     if ($where) {
       $query .= " AND {$where}";
@@ -262,13 +301,16 @@ WHERE  cacheKey = %1
     $query = "
 SELECT COUNT(*) FROM civicrm_prevnext_cache pn
        {$join}
-WHERE cacheKey $op %1
+WHERE (pn.cacheKey $op %1 OR pn.cacheKey $op %2)
 ";
     if ($where) {
       $query .= " AND {$where}";
     }
 
-    $params = array(1 => array($cacheKey, 'String'));
+    $params = array(
+      1 => array($cacheKey, 'String'),
+      2 => array("{$cacheKey}_conflicts", 'String')
+    );
     return (int) CRM_Core_DAO::singleValueQuery($query, $params, TRUE, FALSE);
   }
 

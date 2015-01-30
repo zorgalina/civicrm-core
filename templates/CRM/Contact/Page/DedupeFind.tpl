@@ -68,6 +68,7 @@
         <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Postcode{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-conflicts">{ts}Conflicts{/ts}</th>
         <th class="crm-threshold">{ts}Threshold{/ts}</th>
         <th class="crm-empty">&nbsp;</th>
       </tr>
@@ -85,6 +86,7 @@
         <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Postcode{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact-conflicts">{ts}Conflicts{/ts}</th>
         <th class="crm-threshold">{ts}Threshold{/ts}</th>
         <th class="crm-empty">&nbsp;</th>
       </tr>
@@ -160,6 +162,7 @@ CRM.$(function($) {
       {data: "dst_email"},
       {data: "dst_street"},
       {data: "dst_postcode"},
+      {data: "conflicts"},
       {data: "weight"},
       {data: "actions"},
     ],
