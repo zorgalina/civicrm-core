@@ -53,6 +53,12 @@
       </table>
     </div><!-- /.crm-accordion-body -->
   </div><!-- /.crm-accordion-wrapper -->
+  <div>
+    Show / Hide columns:
+    <a class="toggle-vis" data-column-main="7" data-column-dupe="8">Street Address</a>, &nbsp;
+    <a class="toggle-vis" data-column-main="9" data-column-dupe="10">Post Code</a>, &nbsp;
+    <a class="toggle-vis" data-column-main="11">Conflicts</a>
+  </div><br/>
   <table id="dupePairs" class="display">
     <thead>
 <!--    <tr class="columnheader"><th class="sortable">{ts}Contact{/ts} 1</th><th id="sortable">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th><th id="sortable">{ts}Threshold{/ts}</th><th id="sortable">&nbsp;</th></tr>-->
@@ -61,30 +67,30 @@
         <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
         <th class="crm-contact">{ts}Email{/ts} 1</th>
-        <th class="crm-contact">{ts}Street Address{/ts} 1</th>
-        <th class="crm-contact">{ts}Postcode{/ts} 1</th>
         <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact">{ts}Street Address{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact">{ts}Postcode{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Postcode{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-conflicts">{ts}Conflicts{/ts}</th>
         <th class="crm-threshold">{ts}Threshold{/ts}</th>
         <th class="crm-empty">&nbsp;</th>
       </tr>
     </thead>
-    <tfoot>
+    <tfoot class="upper">
       <tr class="columnfooter">
         <th class="crm-dedupe-merge">&nbsp;</th>
         <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact">{ts}Contact{/ts} 1</th>
         <th class="crm-contact">{ts}Email{/ts} 1</th>
-        <th class="crm-contact">{ts}Street Address{/ts} 1</th>
-        <th class="crm-contact">{ts}Postcode{/ts} 1</th>
         <th class="crm-empty">&nbsp;</th>
         <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact">{ts}Street Address{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
+        <th class="crm-contact">{ts}Postcode{/ts} 1</th>
         <th class="crm-contact-duplicate">{ts}Postcode{/ts} 2 ({ts}Duplicate{/ts})</th>
         <th class="crm-contact-conflicts">{ts}Conflicts{/ts}</th>
         <th class="crm-threshold">{ts}Threshold{/ts}</th>
@@ -149,18 +155,19 @@
 CRM.$(function($) {
   var sourceUrl = {/literal}'{$sourceUrl}'{literal};
   $('#dupePairs').dataTable({
+    //"scrollX": true,
     "ajax": sourceUrl,
     "columns"  : [
       {data: "is_selected_input"},
       {data: "src_image"},
       {data: "src"},
       {data: "src_email"},
-      {data: "src_street"},
-      {data: "src_postcode"},
       {data: "dst_image"},
       {data: "dst"},
       {data: "dst_email"},
+      {data: "src_street"},
       {data: "dst_street"},
+      {data: "src_postcode"},
       {data: "dst_postcode"},
       {data: "conflicts"},
       {data: "weight"},
@@ -187,19 +194,6 @@ CRM.$(function($) {
     }
   });
 
-  // apply dataTable
-  var table = $('#dupePairs').DataTable();
-  
-  // apply the search
-  $('#dupePairs').DataTable().columns().eq(0).each(function (colIdx) {
-    $( 'input', table.column(colIdx).footer()).on( 'keyup change', function () {
-      table
-        .column(colIdx)
-        .search(this.value)
-        .draw();
-    });
-  });
-
   // apply selected class on click of a row
   $('#dupePairs tbody').on('click', 'tr', function() {
     $(this).toggleClass('selected');
@@ -207,6 +201,32 @@ CRM.$(function($) {
     var sth = $('input.crm-dedupe-select', this);
     console.log(sth);
     toggleDedupeSelect(sth);
+  });
+
+  // apply dataTable
+  var table = $('#dupePairs').DataTable();
+  
+  // apply the search
+  table.columns().eq(0).each(function (colIdx) {
+    $( 'input', table.column(colIdx).footer()).on( 'keyup change', function () {
+      console.log("colIdx=" + colIdx + ", val=" + this.value);
+      table
+        .column(colIdx)
+        .search(this.value)
+        .draw();
+    });
+  });
+
+  // show / hide columns
+  $('a.toggle-vis').on('click', function (e) {
+    e.preventDefault();
+    var column = table.column( $(this).attr('data-column-main') );
+    column.visible( ! column.visible() );
+
+    if ($(this).attr('data-column-dupe')) {
+      column = table.column( $(this).attr('data-column-dupe') );
+      column.visible( ! column.visible() );
+    }
   });
 });
 
