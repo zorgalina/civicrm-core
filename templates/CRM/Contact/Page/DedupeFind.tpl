@@ -31,25 +31,42 @@
     </div><!-- /.crm-accordion-header -->
     <div class="crm-accordion-body">
       <table class="no-border form-layout-compressed" id="searchOptions" style="width:100%;">
-          <tr>
-            <td class="crm-contact-form-block-first_name" colspan="2"><label for="first_name">{ts}{$form.first_name.label}{/ts}</label><br />
-              {$form.first_name.html}
-            </td>
-            <td class="crm-contact-form-block-last_name"><label for="last_name">{$form.last_name.label}</label><br />
-              {$form.last_name.html}
-            </td>
-          </tr>
-          <tr>
-            <td class="crm-contact-form-block-email email medium crm-form-text" colspan="2"><label for="email">{ts}{$form.email.label}{/ts}</label><br />
-              {$form.email.html}
-            </td>
-            <td class="crm-contact-form-block-postal_code crm_postal_code crm-form-text" colspan="2"><label for="email">{ts}{$form.postal_code.label}{/ts}</label><br />
-              {$form.postal_code.html}
-            </td>
-            <td style="vertical-align: bottom;">
-              <span class="crm-button"><input id="search-filter" class="crm-form-submit default" name="_qf_Basic_refresh" value="Search" type="button" /></span>
-            </td>
-          </tr>
+        <tr>
+          <td class="crm-contact-form-block-contact1">
+            <label for="contact1">{ts}Contact 1{/ts}</label><br />
+            <input type="text" placeholder="Search Contact1" search-column="2" />
+          </td>
+          <td class="crm-contact-form-block-contact2">
+            <label for="contact2">{ts}Contact 2{/ts}</label><br />
+            <input type="text" placeholder="Search Contact2" search-column="5" />
+          </td>
+          <td class="crm-contact-form-block-email1">
+            <label for="email1">{ts}Email 1{/ts}</label><br />
+            <input type="text" placeholder="Search Email1" search-column="3" />
+          </td>
+          <td class="crm-contact-form-block-email2">
+            <label for="email2">{ts}Email 2{/ts}</label><br />
+            <input type="text" placeholder="Search Email2" search-column="6" />
+          </td>
+        </tr>
+        <tr>
+          <td class="crm-contact-form-block-street-address1">
+            <label for="street-adddress1">{ts}Street Address 1{/ts}</label><br />
+            <input type="text" placeholder="Search Street Address1" search-column="7" />
+          </td>
+          <td class="crm-contact-form-block-street-address2">
+            <label for="street-adddress2">{ts}Street Address 2{/ts}</label><br />
+            <input type="text" placeholder="Search Street Address2" search-column="8" />
+          </td>
+          <td class="crm-contact-form-block-postcode1">
+            <label for="postcode1">{ts}Postcode 1{/ts}</label><br />
+            <input type="text" placeholder="Search Postcode1" search-column="9" />
+          </td>
+          <td class="crm-contact-form-block-postcode2">
+            <label for="postcode2">{ts}Postcode 2{/ts}</label><br />
+            <input type="text" placeholder="Search Postcode2" search-column="10" />
+          </td>
+        </tr>
       </table>
     </div><!-- /.crm-accordion-body -->
   </div><!-- /.crm-accordion-wrapper -->
@@ -61,7 +78,6 @@
   </div><br/>
   <table id="dupePairs" class="display">
     <thead>
-<!--    <tr class="columnheader"><th class="sortable">{ts}Contact{/ts} 1</th><th id="sortable">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th><th id="sortable">{ts}Threshold{/ts}</th><th id="sortable">&nbsp;</th></tr>-->
       <tr> 
         <th class="crm-dedupe-merge">&nbsp;</th>
         <th class="crm-empty">&nbsp;</th>
@@ -79,24 +95,6 @@
         <th class="crm-empty">&nbsp;</th>
       </tr>
     </thead>
-    <tfoot class="upper">
-      <tr class="columnfooter">
-        <th class="crm-dedupe-merge">&nbsp;</th>
-        <th class="crm-empty">&nbsp;</th>
-        <th class="crm-contact">{ts}Contact{/ts} 1</th>
-        <th class="crm-contact">{ts}Email{/ts} 1</th>
-        <th class="crm-empty">&nbsp;</th>
-        <th class="crm-contact-duplicate">{ts}Contact{/ts} 2 ({ts}Duplicate{/ts})</th>
-        <th class="crm-contact-duplicate">{ts}Email{/ts} 2 ({ts}Duplicate{/ts})</th>
-        <th class="crm-contact">{ts}Street Address{/ts} 1</th>
-        <th class="crm-contact-duplicate">{ts}Street Address{/ts} 2 ({ts}Duplicate{/ts})</th>
-        <th class="crm-contact">{ts}Postcode{/ts} 1</th>
-        <th class="crm-contact-duplicate">{ts}Postcode{/ts} 2 ({ts}Duplicate{/ts})</th>
-        <th class="crm-contact-conflicts">{ts}Conflicts{/ts}</th>
-        <th class="crm-threshold">{ts}Threshold{/ts}</th>
-        <th class="crm-empty">&nbsp;</th>
-      </tr>
-    </tfoot>
   </table>
   {if $cid}
     <table style="width: 45%; float: left; margin: 10px;">
@@ -155,7 +153,7 @@
 CRM.$(function($) {
   var sourceUrl = {/literal}'{$sourceUrl}'{literal};
   $('#dupePairs').dataTable({
-    //"scrollX": true,
+    "scrollX": true,
     "ajax": sourceUrl,
     "columns"  : [
       {data: "is_selected_input"},
@@ -186,35 +184,31 @@ CRM.$(function($) {
     }
   });
 
+  // apply selected class on click of a row
+  $('#dupePairs tbody').on('click', 'tr', function() {
+    $(this).toggleClass('selected');
+    $('input.crm-dedupe-select', this).prop('checked', $(this).hasClass("selected"));
+    var sth = $('input.crm-dedupe-select', this);
+    toggleDedupeSelect(sth);
+  });
+
   // inline search boxes placed in tfoot
-  $('#dupePairs tfoot th').each( function () {
+  $('#dupePairsColFilters thead th').each( function () {
     var title = $('#dupePairs thead th').eq($(this).index()).text();
     if (title.length > 1) {
       $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
     }
   });
 
-  // apply selected class on click of a row
-  $('#dupePairs tbody').on('click', 'tr', function() {
-    $(this).toggleClass('selected');
-    $('input.crm-dedupe-select', this).prop('checked', $(this).hasClass("selected"));
-    var sth = $('input.crm-dedupe-select', this);
-    console.log(sth);
-    toggleDedupeSelect(sth);
-  });
-
   // apply dataTable
   var table = $('#dupePairs').DataTable();
-  
+
   // apply the search
-  table.columns().eq(0).each(function (colIdx) {
-    $( 'input', table.column(colIdx).footer()).on( 'keyup change', function () {
-      console.log("colIdx=" + colIdx + ", val=" + this.value);
-      table
-        .column(colIdx)
-        .search(this.value)
-        .draw();
-    });
+  $('#searchOptions input').on( 'keyup change', function () {
+    table
+      .column($(this).attr('search-column'))
+      .search(this.value)
+      .draw();
   });
 
   // show / hide columns
@@ -242,7 +236,7 @@ function toggleDedupeSelect(element) {
   gid  = gid.length > 0 ? gid : 0;
   
   CRM.$.post(dataUrl, {pnid: id, rgid: rgid, gid: gid, is_selected: is_selected}, function (data) {
-    console.log(data);
+    // nothing to do for now
   }, 'json');
 }
 </script>

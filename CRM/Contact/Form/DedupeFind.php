@@ -62,7 +62,6 @@ class CRM_Contact_Form_DedupeFind extends CRM_Admin_Form {
    * @access public
    */
   public function buildQuickForm() {
-
     $groupList = array('' => ts('- All Contacts -')) + CRM_Core_PseudoConstant::nestedGroup();
 
     $this->add('select', 'group_id', ts('Select Group'), $groupList, FALSE, array('class' => 'crm-select2 huge'));
@@ -79,11 +78,6 @@ class CRM_Contact_Form_DedupeFind extends CRM_Admin_Form {
         ),
       )
     );
-    $attributes = CRM_Core_DAO::getAttribute('CRM_Contact_DAO_Contact');
-    $this->addElement('text', 'first_name', ts('First Name'), $attributes['first_name']);
-    $this->addElement('text', 'last_name', ts('Last Name'), $attributes['last_name']);
-    $this->addElement('text', 'email', ts('Email'), $attributes['last_name']);
-    $this->addElement('text', 'postal_code', ts('Postal Code'), $attributes['email']);
   }
 
   function setDefaultValues() {
