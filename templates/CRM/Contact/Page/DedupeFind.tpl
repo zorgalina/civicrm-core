@@ -76,7 +76,7 @@
     <a class="toggle-vis" data-column-main="9" data-column-dupe="10">Post Code</a>, &nbsp;
     <a class="toggle-vis" data-column-main="11">Conflicts</a>
   </div><br/>
-  <table id="dupePairs" class="display">
+  <table id="dupePairs" class="display compact" cellspacing="0" width="100%">
     <thead>
       <tr> 
         <th class="crm-dedupe-merge">&nbsp;</th>
@@ -95,6 +95,8 @@
         <th class="crm-empty">&nbsp;</th>
       </tr>
     </thead>
+    <tbody>
+    </tbody>
   </table>
   {if $cid}
     <table style="width: 45%; float: left; margin: 10px;">
@@ -153,7 +155,9 @@
 CRM.$(function($) {
   var sourceUrl = {/literal}'{$sourceUrl}'{literal};
   $('#dupePairs').dataTable({
-    "scrollX": true,
+    //"scrollX": true, // doesn't work with hover popup for for icons
+    "lengthMenu": [[10, 25, 50, 100, 1000, 2000, -1], [10, 25, 50, 100, 1000, 2000, "All"]],
+    "dom": 'flrtip',
     "ajax": sourceUrl,
     "columns"  : [
       {data: "is_selected_input"},
@@ -171,16 +175,25 @@ CRM.$(function($) {
       {data: "weight"},
       {data: "actions"},
     ],
-    "columnDefs": [ {
-      "targets": [0, 4],
-      "orderable": false
-    }],
+    "order": [], // removes default order by for column 1 (checkbox)
+    "columnDefs": [ 
+      {
+        "targets": [0, 1, 4],
+        "orderable": false
+      },
+      {
+        "targets": [7, 8, 9, 10, 11],
+        "visible": false
+      }
+    ],
     rowCallback: function (row, data) {
       // Set the checked state of the checkbox in the table
       $('input.crm-dedupe-select', row).prop('checked', data.is_selected == 1);
       if (data.is_selected == 1) {
-      $(row).toggleClass('selected');
+        $(row).toggleClass('selected');
       }
+      // for action column at the last, set nowrap
+      $('td:last', row).attr('nowrap','nowrap');
     }
   });
 
