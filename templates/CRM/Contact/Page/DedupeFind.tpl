@@ -74,7 +74,8 @@
     Show / Hide columns:
     <a class="toggle-vis" data-column-main="7" data-column-dupe="8">Street Address</a>, &nbsp;
     <a class="toggle-vis" data-column-main="9" data-column-dupe="10">Post Code</a>, &nbsp;
-    <a class="toggle-vis" data-column-main="11">Conflicts</a>
+    <a class="toggle-vis" data-column-main="11">Conflicts</a>, &nbsp;
+    <a class="toggle-vis" data-column-main="12">Threshold</a>
   </div><br/>
   <table id="dupePairs" class="display compact" cellspacing="0" width="100%">
     <thead>
@@ -178,11 +179,11 @@ CRM.$(function($) {
     "order": [], // removes default order by for column 1 (checkbox)
     "columnDefs": [ 
       {
-        "targets": [0, 1, 4],
+        "targets": [0, 1, 4, 13],
         "orderable": false
       },
       {
-        "targets": [7, 8, 9, 10, 11],
+        "targets": [7, 8, 9, 10, 11, 12],
         "visible": false
       }
     ],
