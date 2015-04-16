@@ -702,6 +702,7 @@ LIMIT {$offset}, {$rowCount}
 
     $gid         = isset($_REQUEST['gid']) ? CRM_Utils_Type::escape($_REQUEST['gid'], 'Integer') : 0;
     $rgid        = isset($_REQUEST['rgid']) ? CRM_Utils_Type::escape($_REQUEST['rgid'], 'Integer') : 0;
+    $selected    = isset($_REQUEST['selected']) ? 1 : 0;
     $contactType = '';
     if ($rgid) {
       $contactType = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $rgid, 'contact_type');
@@ -729,6 +730,9 @@ LIMIT {$offset}, {$rowCount}
 
     $join  = '';
     $where = "de.id IS NULL";
+    if ($selected) {
+      $where .= ' AND pn.is_selected = 1';
+    }
 
     if ($firstName || $lastName || $email || $postalCode) {
       $join .= " INNER JOIN civicrm_contact contact1 ON pn.entity_id1 = contact1.id";
@@ -825,7 +829,7 @@ LIMIT {$offset}, {$rowCount}
     }
 
     header('Content-Type: application/json');
-    echo CRM_Utils_JSON::encodeDataTableSelector($searchRows, $sEcho, $iTotal, $iFilteredTotal, $selectorElements);
+    echo CRM_Utils_JSON::encodeDataTable($searchRows, $selectorElements);
 
     CRM_Utils_System::civiExit();
   }

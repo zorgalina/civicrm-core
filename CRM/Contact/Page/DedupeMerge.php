@@ -103,6 +103,7 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
 
     $urlQry = "reset=1&action=update&rgid={$rgid}";
     $urlQry = $gid ? ($urlQry . "&gid={$gid}") : $urlQry;
+    $urlQry .= "&selected=1";
 
     // Setup the Runner
     $runner = new CRM_Queue_Runner(array(
