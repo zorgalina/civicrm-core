@@ -167,7 +167,7 @@ class CRM_Contact_Form_CustomData extends CRM_Core_Form {
     // when custom data is included in this page
     if (!empty($_POST['hidden_custom'])) {
       for ($i = 0; $i <= $_POST['hidden_custom_group_count'][$this->_groupID]; $i++) {
-        CRM_Custom_Form_CustomData::preProcess($this, NULL, NULL, $i);
+        CRM_Custom_Form_CustomData::preProcess($this, NULL, $this->_contactSubType, $i);
         CRM_Custom_Form_CustomData::buildQuickForm($this);
         CRM_Custom_Form_CustomData::setDefaultValues($this);
       }
@@ -190,11 +190,11 @@ class CRM_Contact_Form_CustomData extends CRM_Core_Form {
         );
         if ($isMultiple) {
           $this->assign('multiRecordDisplay', $this->_multiRecordDisplay);
-          $saveButtonName = $this->_copyValueId ? 'Save a Copy': 'Save';
+          $saveButtonName = $this->_copyValueId ? ts('Save a Copy') : ts('Save');
           $this->addButtons(array(
               array(
                 'type' => 'upload',
-                'name' => ts('%1', array(1 => $saveButtonName)),
+                'name' => $saveButtonName,
                 'isDefault' => TRUE,
               ),
               array(

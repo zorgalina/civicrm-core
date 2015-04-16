@@ -200,7 +200,7 @@ CRM.strings = CRM.strings || {};
 
   // Workaround for https://github.com/ivaynberg/select2/issues/1246
   $.ui.dialog.prototype._allowInteraction = function(e) {
-    return !!$(e.target).closest('.ui-dialog, .ui-datepicker, .select2-drop, .cke_dialog').length;
+    return !!$(e.target).closest('.ui-dialog, .ui-datepicker, .select2-drop, .cke_dialog, #civicrm-menu').length;
   };
 
   /**
@@ -390,7 +390,7 @@ CRM.strings = CRM.strings || {};
           $('#select2-drop').off('.crmEntity').on('click.crmEntity', 'a.crm-add-entity', function(e) {
             $el.select2('close');
             CRM.loadForm($(this).attr('href'), {
-              dialog: {width: 500, height: 'auto'}
+              dialog: {width: 500, height: 220}
             }).on('crmFormSuccess', function(e, data) {
               if (data.status === 'success' && data.id) {
                 CRM.status(ts('%1 Created', {1: data.label}));
