@@ -59,6 +59,7 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
     $rgid = CRM_Utils_Request::retrieve('rgid', 'Positive', $this, FALSE, 0);
     $gid  = CRM_Utils_Request::retrieve('gid', 'Positive', $this, FALSE, 0);
     $action = CRM_Utils_Request::retrieve('action', 'String', CRM_Core_DAO::$_nullObject);
+    $mode   = CRM_Utils_Request::retrieve('mode', 'String', CRM_Core_DAO::$_nullObject, FALSE, 'safe');
 
     $contactType = CRM_Core_DAO::getFieldValue('CRM_Dedupe_DAO_RuleGroup', $rgid, 'contact_type');
     $cacheKeyString = "merge {$contactType}";
@@ -93,7 +94,7 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
     for ($i = 1; $i <= ceil($total/self::BATCHLIMIT); $i++) {
       $task  = new CRM_Queue_Task(
         array ('CRM_Contact_Page_DedupeMerge', 'callBatchMerge'),
-        array($rgid, $gid, 'safe', TRUE, self::BATCHLIMIT, $isSelected),
+        array($rgid, $gid, $mode, TRUE, self::BATCHLIMIT, $isSelected),
         "Processed " . $i*self::BATCHLIMIT . " pair of duplicates"
       );
 
@@ -103,7 +104,7 @@ class CRM_Contact_Page_DedupeMerge extends CRM_Core_Page{
 
     $urlQry = "reset=1&action=update&rgid={$rgid}";
     $urlQry = $gid ? ($urlQry . "&gid={$gid}") : $urlQry;
-    $urlQry .= "&selected=1";
+    $urlQry .= "&context=conflicts";
 
     // Setup the Runner
     $runner = new CRM_Queue_Runner(array(

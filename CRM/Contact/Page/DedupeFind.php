@@ -138,7 +138,6 @@ class CRM_Contact_Page_DedupeFind extends CRM_Core_Page_Basic {
     ) {
       $cid          = CRM_Utils_Request::retrieve('cid', 'Positive', $this, FALSE, 0);
       $rgid         = CRM_Utils_Request::retrieve('rgid', 'Positive', $this, FALSE, 0);
-      $isSel        = CRM_Utils_Request::retrieve('selected', 'Boolean', $this, FALSE);
       $this->action = CRM_Core_Action::UPDATE;
 
       //calculate the $contactType
@@ -156,7 +155,7 @@ class CRM_Contact_Page_DedupeFind extends CRM_Core_Page_Basic {
       if ($rgid) {
         $sourceParams .= "&rgid={$rgid}";
       }
-      if ($isSel) {
+      if ($context == 'conflicts') {
         $sourceParams .= "&selected=1";
       }
 
@@ -176,14 +175,13 @@ class CRM_Contact_Page_DedupeFind extends CRM_Core_Page_Basic {
       $join = "LEFT JOIN civicrm_dedupe_exception de ON ( pn.entity_id1 = de.contact_id1 AND
                                                                  pn.entity_id2 = de.contact_id2 )";
       $where = "de.id IS NULL";
-      if ($isSel) {
+      if ($context == 'conflicts') {
         $where .= " AND pn.is_selected = 1";
       }
       $this->_mainContacts = CRM_Core_BAO_PrevNextCache::retrieve($cacheKeyString, $join, $where);
       if (empty($this->_mainContacts)) {
-        if ($isSel) {
+        if ($context == 'conflicts') {
           // if the current screen was intended to list only selected contacts, move back to full dupe list
-          //CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/contact/dedupefind', $sourceParams));
           $sourceParams = 'reset=1&action=update';
           if ($gid) {
             $sourceParams .= "&gid={$gid}";

@@ -119,6 +119,27 @@
 
 {if $context eq 'search'}
    <a href="{$backURL}" class="button"><span>{ts}Done{/ts}</span></a>
+{elseif $context eq 'conflicts'}
+   {if $gid}
+      {capture assign=backURL}{crmURL p="civicrm/contact/dedupemerge" q="reset=1&rgid=`$rgid`&gid=`$gid`&action=map&mode=aggressive" a=1}{/capture}
+   {else}
+      {capture assign=backURL}{crmURL p="civicrm/contact/dedupemerge" q="reset=1&rgid=`$rgid`&action=map&mode=aggressive" a=1}{/capture}
+   {/if}
+   <a href="{$backURL}" title="{ts}Batch Merge Duplicate Contacts{/ts}" onclick="return confirm('{ts escape="js"}This will run the batch merge process on the selected duplicates. The operation will run in force merge mode - all selected duplicates will be merged into main contacts even in case of any conflicts. Click OK to proceed if you are sure you wish to run this operation.{/ts}');" class="button"><span>{ts}Force Merge Selected Duplicates{/ts}</span></a>
+
+   {if $gid}
+     {capture assign=backURL}{crmURL p="civicrm/contact/dedupemerge" q="reset=1&rgid=`$rgid`&gid=`$gid`&mode=aggressive" a=1}{/capture}
+   {else}
+     {capture assign=backURL}{crmURL p="civicrm/contact/dedupemerge" q="reset=1&rgid=`$rgid`&mode=aggressive" a=1}{/capture}
+   {/if}
+   <a href="{$backURL}" title="{ts}Batch Merge Duplicate Contacts{/ts}" onclick="return confirm('{ts escape="js"}This will run the batch merge process on the listed duplicates. The operation will run in safe mode - only records with no direct data conflicts will be merged. Click OK to proceed if you are sure you wish to run this operation.{/ts}');" class="button"><span>{ts}Force Merge All Duplicates{/ts}</span></a>
+
+   {if $gid}
+      {capture assign=backURL}{crmURL p="civicrm/contact/dedupefind" q="reset=1&action=update&rgid=`$rgid`&gid=`$gid`" a=1}{/capture}
+   {else}
+      {capture assign=backURL}{crmURL p="civicrm/contact/dedupefind" q="reset=1&action=update&rgid=`$rgid`" a=1}{/capture}
+   {/if}
+   <a href="{$backURL}" title="{ts}List All Duplicates{/ts}" class="button"><span>{ts}List All Duplicates{/ts}</span></a>
 {else}
    {if $gid}
       {capture assign=backURL}{crmURL p="civicrm/contact/dedupefind" q="reset=1&rgid=`$rgid`&gid=`$gid`&action=renew" a=1}{/capture}
